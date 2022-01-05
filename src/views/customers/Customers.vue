@@ -14,11 +14,11 @@
                       class="py-0 pr-0"
                       style="display: inherit"
                     >
-                      <v-tab :key="0">
+                      <!-- <v-tab :key="0">
                         <span>
                           {{ $t("insights") }}
                         </span>
-                      </v-tab>
+                      </v-tab> -->
                       <v-tab :key="1">
                         <span v-if="type == 'npo'">
                           {{ $t("donors") }}
@@ -341,20 +341,20 @@
                       </v-menu>
                     </v-col>
                   </v-row>
-                  <v-tab-item v-if="type != 'npo'">
+                  <!-- <v-tab-item v-if="type != 'npo'">
                     <v-card flat>
                       <v-card-text class="">
                         <Insight />
                       </v-card-text>
                     </v-card>
-                  </v-tab-item>
-                  <v-tab-item v-else>
+                  </v-tab-item> -->
+                  <!-- <v-tab-item v-else>
                     <v-card flat>
                       <v-card-text class="">
                         <InsightNpo />
                       </v-card-text>
                     </v-card>
-                  </v-tab-item>
+                  </v-tab-item> -->
 
                   <v-tab-item v-if="type != 'npo'">
                     <v-card flat>
@@ -441,8 +441,8 @@ import { data, dataStore } from "@/observable/store";
 export default {
   name: "Customers",
   components: {
-    Insight: () => import("./Insight"),
-    InsightNpo: () => import("./InsightNpo"),
+    // Insight: () => import("./Insight"),
+    // InsightNpo: () => import("./InsightNpo"),
     CustomersTab: () => import("./customer/CustomersTab"),
     Sales: () => import("./sales/Sales"),
     // Price: () => import('./Price'),
