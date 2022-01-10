@@ -5,54 +5,39 @@
                 vertical
                 class="tab_setting tab_product_service_show"
                 slider-color="grayBg"
-                slider-size="7"
-            >
-                <!--        <v-tab>-->
-                <!--          <span class="hidden-sm-and-up">-->
-                <!--            <v-icon left>mdi-pen</v-icon>-->
-                <!--          </span>-->
-                <!--          <span class="hidden-sm-and-down text-capitalize">-->
-                <!--            {{ $t("company") }}-->
-                <!--          </span>-->
-                <!--        </v-tab>-->
+                slider-size="7">
                 <v-tab>
-          <span class="hidden-sm-and-up">
-            <v-icon left>mdi-pen</v-icon>
-          </span>
+                    <span class="hidden-sm-and-up">
+                        <v-icon left>mdi-pen</v-icon>
+                    </span>
                     <span class="hidden-sm-and-down text-capitalize">
-            {{ $t("prefix_setting") }}
-          </span>
+                        {{ $t("prefix_setting") }}
+                    </span>
                 </v-tab>
                 <v-tab>
-          <span class="hidden-sm-and-up">
-            <v-icon left>mdi-pen</v-icon>
-          </span>
+                    <span class="hidden-sm-and-up">
+                        <v-icon left>mdi-pen</v-icon>
+                    </span>
                     <span class="hidden-sm-and-down text-capitalize">
-            {{ $t("uom_category") }}
-          </span>
+                        {{ $t("uom_category") }}
+                    </span>
                 </v-tab>
                 <v-tab>
-          <span class="hidden-sm-and-up">
-            <v-icon left>mdi-pen</v-icon>
-          </span>
+                    <span class="hidden-sm-and-up">
+                        <v-icon left>mdi-pen</v-icon>
+                    </span>
                     <span class="hidden-sm-and-down text-capitalize">
-            {{ $t("uom") }}
-          </span>
+                        {{ $t("uom") }}
+                    </span>
                 </v-tab>
-                <!--        <v-tab-item>-->
-                <!--          <v-row>-->
-                <!--            <v-col sm="12" cols="12" class="pl-6 pt-0">-->
-                <!--              <Company />-->
-                <!--            </v-col>-->
-                <!--          </v-row>-->
-                <!--        </v-tab-item>-->
-                <!-- <v-tab-item>
-                  <v-row>
-                    <v-col sm="12" cols="12" class="pl-6 pt-0">
-                      <Currency />
-                    </v-col>
-                  </v-row>
-                </v-tab-item> -->
+                <v-tab>
+                    <span class="hidden-sm-and-up">
+                        <v-icon left>mdi-pen</v-icon>
+                    </span>
+                    <span class="hidden-sm-and-down text-capitalize">
+                        {{ $t("dimension") }}
+                    </span>
+                </v-tab>
                 <v-tab-item>
                     <v-row>
                         <v-col sm="12" cols="12" class="pl-6 pt-0">
@@ -60,13 +45,6 @@
                         </v-col>
                     </v-row>
                 </v-tab-item>
-                <!-- <v-tab-item>
-                  <v-row>
-                    <v-col sm="12" cols="12" class="pl-6 pt-0">
-                      <Form />
-                    </v-col>
-                  </v-row>
-                </v-tab-item> -->
                 <v-tab-item>
                     <v-row>
                         <v-col sm="12" cols="12" class="pl-6 pt-0">
@@ -78,6 +56,13 @@
                     <v-row>
                         <v-col sm="12" cols="12" class="pl-6 pt-0">
                             <Uom/>
+                        </v-col>
+                    </v-row>
+                </v-tab-item>
+                <v-tab-item>
+                    <v-row>
+                        <v-col sm="12" cols="12" class="pl-6 pt-0">
+                            <Dimension/>
                         </v-col>
                     </v-row>
                 </v-tab-item>
@@ -111,6 +96,7 @@ export default {
 
         UomCategory: () => import("./UomCategory"),
         Uom: () => import("./Uom"),
+        Dimension: () => import("./Dimension")
     },
 };
 </script>
