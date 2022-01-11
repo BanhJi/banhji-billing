@@ -14,11 +14,11 @@
                       class="py-0 pr-0"
                       style="display: inherit"
                     >
-                      <!-- <v-tab :key="0">
+                      <v-tab :key="0">
                         <span>
                           {{ $t("insights") }}
                         </span>
-                      </v-tab> -->
+                      </v-tab>
                       <v-tab :key="1">
                         <span v-if="type == 'npo'">
                           {{ $t("donors") }}
@@ -43,7 +43,11 @@
                           {{ $t("price") }}
                         </span>
                       </v-tab>
-
+                      <v-tab :key="4" v-if="type != 'npo'">
+                        <span>
+                          {{ $t("dimension") }}
+                        </span>
+                      </v-tab>
                       <v-tab :key="4" v-if="type != 'npo'">
                         <span>
                           {{ $t("setting") }}
@@ -341,20 +345,20 @@
                       </v-menu>
                     </v-col>
                   </v-row>
-                  <!-- <v-tab-item v-if="type != 'npo'">
+                  <v-tab-item v-if="type != 'npo'">
                     <v-card flat>
                       <v-card-text class="">
                         <Insight />
                       </v-card-text>
                     </v-card>
-                  </v-tab-item> -->
-                  <!-- <v-tab-item v-else>
+                  </v-tab-item>
+                  <v-tab-item v-else>
                     <v-card flat>
                       <v-card-text class="">
                         <InsightNpo />
                       </v-card-text>
                     </v-card>
-                  </v-tab-item> -->
+                  </v-tab-item>
 
                   <v-tab-item v-if="type != 'npo'">
                     <v-card flat>
@@ -395,7 +399,13 @@
                       </v-card-text>
                     </v-card>
                   </v-tab-item>
-
+                  <v-tab-item v-if="type != 'npo'">
+                    <v-card flat>
+                      <v-card-text class="">
+                        <Dimension />
+                      </v-card-text>
+                    </v-card>
+                  </v-tab-item>
                   <v-tab-item v-if="type != 'npo'">
                     <v-card flat>
                       <v-card-text class="">
@@ -441,8 +451,8 @@ import { data, dataStore } from "@/observable/store";
 export default {
   name: "Customers",
   components: {
-    // Insight: () => import("./Insight"),
-    // InsightNpo: () => import("./InsightNpo"),
+    Insight: () => import("./Insight"),
+    InsightNpo: () => import("./InsightNpo"),
     CustomersTab: () => import("./customer/CustomersTab"),
     Sales: () => import("./sales/Sales"),
     // Price: () => import('./Price'),
@@ -455,6 +465,7 @@ export default {
     FundingTab: () => import("@/views/share_funding/funding/FundingTab"),
     CustomersDonorTab: () =>
       import("@/views/share_funding/donor/CustomersDonorTab"),
+    Dimension: () =>import("./dimension/Dimensions")
   },
   data: () => ({
     // active_tab: data.customer_tab.main

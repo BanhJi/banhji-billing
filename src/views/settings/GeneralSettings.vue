@@ -38,6 +38,14 @@
                         {{ $t("dimension") }}
                     </span>
                 </v-tab>
+                <v-tab>
+                    <span class="hidden-sm-and-up">
+                        <v-icon left>mdi-pen</v-icon>
+                    </span>
+                    <span class="hidden-sm-and-down text-capitalize">
+                        {{ $t("tariff") }}
+                    </span>
+                </v-tab>
                 <v-tab-item>
                     <v-row>
                         <v-col sm="12" cols="12" class="pl-6 pt-0">
@@ -63,6 +71,13 @@
                     <v-row>
                         <v-col sm="12" cols="12" class="pl-6 pt-0">
                             <Dimension/>
+                        </v-col>
+                    </v-row>
+                </v-tab-item>
+                <v-tab-item>
+                    <v-row>
+                        <v-col sm="12" cols="12" class="pl-6 pt-0">
+                            <Tariff/>
                         </v-col>
                     </v-row>
                 </v-tab-item>
@@ -96,7 +111,8 @@ export default {
 
         UomCategory: () => import("./UomCategory"),
         Uom: () => import("./Uom"),
-        Dimension: () => import("./Dimension")
+        Dimension: () => import("./Dimension"),
+        Tariff: () => import("./Tariff")
     },
 };
 </script>

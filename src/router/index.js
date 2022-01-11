@@ -1400,6 +1400,15 @@ const routes = [{
             }
         },
         {
+            path: 'contract',
+            name: 'Contract',
+            component: load('contracts/Constracts'),
+            meta: {
+                mainMenu: 'contract',
+                title: 'Contract',
+            }
+        },
+        {
             path: 'accounting',
             name: 'Accounting',
             component: load('accounting/Accounting'),
