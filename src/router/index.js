@@ -1409,6 +1409,15 @@ const routes = [{
             }
         },
         {
+            path: 'individual_contract',
+            name: 'Individual Contract',
+            component: load('contracts/individualContract'),
+            meta: {
+                mainMenu: 'contract',
+                title: 'Contract',
+            }
+        },
+        {
             path: 'accounting',
             name: 'Accounting',
             component: load('accounting/Accounting'),

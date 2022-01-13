@@ -30,6 +30,34 @@
                                                 </span>
                                             </v-tab>
                                         </v-col>
+                                        <v-col sm="2" cols="2" class="px-0" flat>
+                                            <!-- Dropdown New-->
+                                            <v-menu nudge-bottom="4" bottom offset-y origin="bottom top" transition="scroll-y-reverse-transition">
+                                                <template v-slot:activator="{ on }">
+                                                    <span class="hidden-sm-and-up">
+                                                        <div class="ml-6">
+                                                        <v-icon v-on="on" left>mdi-plus</v-icon>
+                                                        </div>
+                                                    </span>
+                                                    <span class="hidden-sm-and-down">
+                                                        <v-btn
+                                                            icon
+                                                            v-on="on"
+                                                            class="dropdown_transactions"
+                                                            style="right: 0">
+                                                            <v-icon size="17" class="ma-1">mdi-plus</v-icon>
+                                                                {{ $t("new") }}
+                                                            <v-icon size="" class="ma-1">expand_more</v-icon>
+                                                        </v-btn>
+                                                    </span>
+                                                </template>
+                                                <v-list>
+                                                    <v-list-item link route to="individual_contract">
+                                                        <v-list-item-title>{{$t("individual_contract")}}</v-list-item-title>
+                                                    </v-list-item>
+                                                </v-list>
+                                            </v-menu>
+                                        </v-col>
                                     </v-row>
                                     <v-tab-item>
                                         <v-card flat>
@@ -95,10 +123,6 @@ export default {
 };
 </script>
 <style scoped>
-/* .v-menu__content{
-  top: 141px !important;
-  left: 1098px !important;
-} */
 .v-menu__content .v-list .v-list-item {
   min-height: 35px !important;
 }
@@ -122,12 +146,8 @@ export default {
   border-bottom: 1px solid #ddd !important;
 }
 
-.menuable__content__active {
-  left: 448px !important;
-}
-
 .v-tab--active {
-  background-color: #e5effa;
+  background-color: #f8f8f9;
   color: #000;
 }
 

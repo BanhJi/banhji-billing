@@ -15,7 +15,23 @@
 						<v-icon left>mdi-pen</v-icon>
 					</span>
 					<span class="hidden-sm-and-down text-capitalize">
-						{{ $t("customer_group") }}
+						{{ $t("exemption") }}
+					</span>
+				</v-tab>
+				<v-tab>
+					<span class="hidden-sm-and-up">
+						<v-icon left>mdi-pen</v-icon>
+					</span>
+					<span class="hidden-sm-and-down text-capitalize">
+						{{ $t("plans") }}
+					</span>
+				</v-tab>
+				<v-tab>
+					<span class="hidden-sm-and-up">
+						<v-icon left>mdi-pen</v-icon>
+					</span>
+					<span class="hidden-sm-and-down text-capitalize">
+						{{ $t("contract_level") }}
 					</span>
 				</v-tab>
 				<v-tab-item>
@@ -28,7 +44,21 @@
 				<v-tab-item>
 					<v-row>
 						<v-col sm="12" cols="12" class="pl-6 pt-0">
-							<!-- <CustomerGroup /> -->
+							<Exemption />
+						</v-col>
+					</v-row>
+				</v-tab-item>
+				<v-tab-item>
+					<v-row>
+						<v-col sm="12" cols="12" class="pl-6 pt-0">
+							<Plan />
+						</v-col>
+					</v-row>
+				</v-tab-item>
+				<v-tab-item>
+					<v-row>
+						<v-col sm="12" cols="12" class="pl-6 pt-0">
+							<ContractLevel />
 						</v-col>
 					</v-row>
 				</v-tab-item>
@@ -42,7 +72,10 @@ export default {
 	data: () => ({}),
 	props: {},
 	components: {
-		Tariff: () =>import("./Tariff")
+		Tariff: () =>import("./Tariff"),
+		Exemption: () =>import("./Exemption"),
+		Plan: () =>import("./Plan"),
+		ContractLevel:() =>import("./ContractLevel")
 	},
 	methods: {
 
