@@ -2,187 +2,174 @@
     <v-app class="zoom-in">
         <v-container>
             <v-row>
+                <v-form ref="form" v-model="valid" lazy-validation>
                 <v-col sm="12" cols="12">
                     <v-card outlined dense class="pa-4 no_border rounded-sm" color="white">
                         <v-row>
-                            <v-col class="bigSide pr-2 py-0" sm="6" cols="12" style="transition: .3s ease-in;">
-                                <v-form ref="form" v-model="valid" lazy-validation>
-                                    <v-card outlined dense class="no_border">
-                                        <h2 class="mb-0">{{ $t("Contract") }}</h2>
-                                    </v-card>
-                                    <v-card outlined dense class="px-4 no_border" color="grayBg">
-                                        <v-row>
-                                            <v-col sm="6" cols="6" class="pb-0 pt-4">
-                                                <label class="label  mb-0">{{ $t("customer") }}</label>
-                                                <v-col
-                                                    sm="12"
-                                                    cols="12"
-                                                    class="kendo_dropdown_custom px-0 pb-3 pt-0">
-                                                    <dropdownlist
-                                                        :data-items="customerList"
-                                                        @change="onChange"
-                                                        :value="customer"
-                                                        :data-item-key="dataItemKey"
-                                                        :text-field="textField"
-                                                        :default-item="defaultItem"
-                                                        :filterable="true"
-                                                        :required="true"
-                                                        :valid="validCustomer"
-                                                        @filterchange="onFilterChange">
-                                                    </dropdownlist>
+                            <v-col class="bigSide pr-2 py-0" sm="8" cols="12" style="transition: .3s ease-in;">
+                                <v-card outlined dense class="no_border">
+                                    <h2 class="mb-0">{{ $t("Contract") }}</h2>
+                                </v-card>
+                                <v-card outlined dense class="px-4 no_border" color="grayBg">
+                                    <v-row>
+                                        <v-col sm="4" cols="12" class="pb-0 pt-4">
+                                            <label class="label  mb-0">{{ $t("customer") }}</label>
+                                            <v-col
+                                                sm="12"
+                                                cols="12"
+                                                class="kendo_dropdown_custom px-0 pb-3 pt-0">
+                                                <dropdownlist
+                                                    :data-items="customerList"
+                                                    @change="onChange"
+                                                    :value="customer"
+                                                    :data-item-key="dataItemKey"
+                                                    :text-field="textField"
+                                                    :default-item="defaultItem"
+                                                    :filterable="true"
+                                                    :required="true"
+                                                    :valid="validCustomer"
+                                                    @filterchange="onFilterChange">
+                                                </dropdownlist>
+                                            </v-col>
+                                            <label class="label mb-0">{{ $t("accounts_receivable") }}</label>
+                                            <v-select
+                                                class="mt-1"
+                                                v-model="contract.receivableAcc"
+                                                :items="receivableAcc"
+                                                item-value="id"
+                                                :item-text="(item) => `${item.number} - ${item.name}`"
+                                                return-object
+                                                placeholder="Account Receivable"
+                                                tage="Account Receivable"
+                                                outlined/>
+                                        </v-col>
+                                        <v-col sm="4" cols="12" class="pb-0 pt-4">
+                                            <label class="label mb-0">{{ $t("number") }}</label>
+                                            <v-row class="mt-1 mr-0">
+                                                <v-col sm="3" cols="3" class="py-0 pr-0">
+                                                    <div class="code_text text-bold">
+                                                        AAA
+                                                    </div>
                                                 </v-col>
-                                                <label class="label  mb-0">{{ $t("date") }}</label>
-                                                <app-datepicker
-                                                    :initialDate="contract.transactionDate"
-                                                    @onChanged="onInvoiceDateChanged"
-                                                    @emitDate="contract.transactionDate = $event"/>
-                                                <label class="label mb-0">{{ $t("accounts_receivable") }}</label>
-                                                <v-select
-                                                    class="mt-1"
-                                                    v-model="contract.receivableAcc"
-                                                    :items="receivableAcc"
-                                                    item-value="id"
-                                                    :item-text="(item) => `${item.number} - ${item.name}`"
-                                                    return-object
-                                                    placeholder="Account Receivable"
-                                                    tage="Account Receivable"
-                                                    outlined/>
-                                            </v-col>
-                                            <v-col sm="6" cols="6" class="pb-0 pt-4">
-                                                <label class="label mb-0">{{ $t("number") }}</label>
-                                                <v-row class="mt-1 mr-0">
-                                                    <v-col sm="3" cols="3" class="py-0 pr-0">
-                                                        <div class="code_text text-bold">
-                                                            AAA
-                                                        </div>
-                                                    </v-col>
-                                                    <v-col sm="7" cols="7" class="py-0 pl-0 pr-1">
-                                                        <v-text-field
-                                                            class=" custom-border "
-                                                            v-model="contract.number"
-                                                            outlined
-                                                            disabled
-                                                            :rules="[(v) => !!v || 'Number is required']"
-                                                            required/>
-                                                    </v-col>
-                                                    <v-col sm="2" cols="2" class="py-0 px-0">
-                                                        <v-icon
-                                                            color="black"
-                                                            size="30"
-                                                            class="border_qrcode"
-                                                            @click="generateNumber">mdi-qrcode
-                                                        </v-icon>
-                                                    </v-col>
-                                                </v-row>
-                                                <label class="label mb-0">{{ $t("contract_type") }}</label>
-                                                <v-select
-                                                    class="mt-1"
-                                                    :items="contractTypes"
-                                                    item-value="id"
-                                                    item-text="name"
-                                                    :rules="[(v) => !!v || 'contract type is required']"
-                                                    return-object
-                                                    outlined/>
-                                                <label class="label mb-0">{{ $t("price_level") }}</label>
-                                                <v-select
-                                                    class="mt-1"
-                                                    v-model="contract.priceLevel"
-                                                    :items="priceLevel"
-                                                    item-value="id"
-                                                    item-text="name"
-                                                    return-object
-                                                    placeholder="Price Level"
-                                                    tage="Default Price Level"
-                                                    outlined
-                                                    :rules="[(v) => !!v['id'] || $t('is_required')]"/>
-                                            </v-col>
-                                        </v-row>
-                                    </v-card>
-                                    <v-divider class="mb-3"/>
-                                    <v-card outlined dense class="px-4 no_border" color="grayBg">
-                                        <v-row style="background-color: #fff;">
-                                            <v-col sm="12" cols="12" class="pt-4 pb-0 px-4">
-                                                <kendo-datasource
-                                                    ref="serviceItemDS"
-                                                    :data="serviceItems"
-                                                    :change="dataSourceChanged"/>
-                                                <kendo-grid
-                                                    id="gridServiceItem"
-                                                    class="grid-function"
-                                                    :data-source-ref="'serviceItemDS'"
-                                                    :sortable="false"
-                                                    :column-menu="true"
-                                                    :editable="true"
-                                                    v-on:databound="dataBound"
-                                                    :scrollable-virtual="true">
-                                                    <kendo-grid-column
-                                                        :command="{iconClass: 'k-icon k-i-trash', text: ' ', click: removeRow, className: 'btn-plus isEditable'}"
-                                                        :title="''"
-                                                        :width="63"
-                                                        :headerAttributes="{style:'text-align: left; background-color: #EDF1F5'}"/>
-                                                    <kendo-grid-column
-                                                        :title="$t('no.')"
-                                                        :width="53"
-                                                        :column-menu="false"
-                                                        :template="rowNumberTmpl"
-                                                        :headerAttributes="{style: 'background-color: #EDF1F5;', class: 'text-products'}"
-                                                        :attributes="{style: 'text-align: products'}"/>
-                                                    <kendo-grid-column
-                                                        :field="'item'"
-                                                        :title="$t('item')"
-                                                        :width="200"
-                                                        :template="itemTemplate"
-                                                        :editor="ItemDropDownEditor"
-                                                        :headerAttributes="{style: 'background-color: #EDF1F5'}"/>
-                                                    <kendo-grid-column
-                                                        :field="'uom'"
-                                                        :title="$t('uom')"
-                                                        :width="120"
-                                                        :template="UOMTemplate"
-                                                        :editor="UOMDropDownEditor"
-                                                        :headerAttributes="{style:'text-align: left; background-color: #EDF1F5'}"
-                                                        :attributes="{style: 'text-align: left'}"/>
-                                                    <kendo-grid-column
-                                                        :field="'price'"
-                                                        :title="$t('price')"
-                                                        :width="200"
-                                                        :template="'<span>#=price || 0#</span>'"
-                                                        :editor="numberEditor"
-                                                        :headerAttributes="{style:'text-align: left; background-color: #EDF1F5',}"
-                                                        :attributes="{style: 'text-align: right'}"/>
-                                                     <kendo-grid-column
-                                                        :field="'amount'"
-                                                        :title="$t('amount')"
-                                                        :width="200"
-                                                        :editable="() => {return false;}"
-                                                        :template="'<span>#=amount || 0#</span>'"
-                                                        :editor="numberEditor"
-                                                        :headerAttributes="{style:'text-align: left; background-color: #EDF1F5'}"
-                                                        :attributes="{style: 'text-align: right'}"/>
-                                                    <kendo-grid-column
-                                                        :field="'vatTax'"
-                                                        :title="$t('vat')"
-                                                        :width="200"
-                                                        :template="vatTemplate"
-                                                        :editor="VatTaxDropDownEditor"
-                                                        :headerAttributes="{style:'text-align: left; background-color: #EDF1F5',}"
-                                                        :attributes="{ style: 'text-align: left' }"/>
-                                                </kendo-grid>
-                                            </v-col>
-                                            <v-col sm="12" cols="12" class="pt-2">
-                                                <v-btn
-                                                    color="primary"
-                                                    class="float-left btn_plus mr-2"
-                                                    @click="addRow">
-                                                    <v-icon size="" class="ma-1">mdi-plus</v-icon>
-                                                </v-btn>
-                                            </v-col>
-                                        </v-row>
-                                    <v-divider/>
-                                    </v-card>
-                                </v-form>
+                                                <v-col sm="7" cols="7" class="py-0 pl-0 pr-1">
+                                                    <v-text-field
+                                                        class=" custom-border "
+                                                        v-model="contract.number"
+                                                        outlined
+                                                        disabled
+                                                        :rules="[(v) => !!v || 'Number is required']"
+                                                        required/>
+                                                </v-col>
+                                                <v-col sm="2" cols="2" class="py-0 px-0">
+                                                    <v-icon
+                                                        color="black"
+                                                        size="30"
+                                                        class="border_qrcode"
+                                                        @click="generateNumber">mdi-qrcode
+                                                    </v-icon>
+                                                </v-col>
+                                            </v-row>
+                                            <label class="label mb-0">{{ $t("contract_type") }}</label>
+                                            <v-select
+                                                class="mt-1"
+                                                v-model="contract.contractTypes"
+                                                :items="contractTypes"
+                                                item-value="id"
+                                                item-text="name"
+                                                :rules="[(v) => !!v || 'contract type is required']"
+                                                return-object
+                                                outlined/>
+                                        </v-col>
+                                        <v-col sm="4" cols="12" class="pb-0 pt-4">
+                                            <label class="label  mb-0">{{ $t("date") }}</label>
+                                            <app-datepicker
+                                                :initialDate="contract.transactionDate"
+                                                @onChanged="onInvoiceDateChanged"
+                                                @emitDate="contract.transactionDate = $event"/>
+                                            <label class="label mb-0">{{ $t("price_level") }}</label>
+                                            <v-select
+                                                class="mt-1"
+                                                v-model="contract.priceLevel"
+                                                :items="priceLevel"
+                                                item-value="id"
+                                                item-text="name"
+                                                return-object
+                                                placeholder="Price Level"
+                                                tage="Default Price Level"
+                                                outlined
+                                                :rules="[(v) => !!v['id'] || $t('is_required')]"/>
+                                        </v-col>
+                                    </v-row>
+                                </v-card>
+                                <v-divider class="mb-3"/>
+                                <v-card outlined dense class="px-4 no_border" color="grayBg">
+                                    <v-row>
+                                        <v-col sm="4" cols="4" outlined dense class="px-4 no_border" color="grayBg">
+                                            <label class="label mb-0">{{ $t("country") }}</label>
+                                            <v-select
+                                                class="mt-1"
+                                                v-model="contract.country"
+                                                :items="countries"
+                                                item-value="id"
+                                                :item-text="(item) => `${item.code} - ${item.name}`"
+                                                :rules="[(v) => !!v['id'] || $t('is_required')]"
+                                                return-object
+                                                tage="Country"
+                                                placeholder="Country"
+                                                outlined=""/>
+                                            <label class="label font_14">{{ $t("Commune") }}</label>
+                                            <v-select
+                                                class=" mt-1"
+                                                v-model="contract.commune"
+                                                :items="communes"
+                                                item-value="id"
+                                                item-text="name"
+                                                return-object
+                                                tage="Sale Channel"
+                                                placeholder="Channel"
+                                                outlined/>
+                                        </v-col>
+                                        <v-col sm="4" cols="4" outlined dense class="px-4 no_border" color="grayBg">
+                                            <label class="label font_14">{{ $t("Province") }}</label>
+                                            <v-select
+                                                class=" mt-1"
+                                                v-model="contract.province"
+                                                :items="provinces"
+                                                :item-text="(item) => `${item.code} - ${item.name}`"
+                                                item-value="id"
+                                                tage="Province"
+                                                clearable
+                                                placeholder="Province"
+                                                outlined/>
+                                            <label class="label font_14">{{ $t("village") }}</label>
+                                            <v-select
+                                                class=" mt-1"
+                                                v-model="contract.village"
+                                                :items="villages"
+                                                item-value="id"
+                                                item-text="name"
+                                                return-object
+                                                tage="Sale Channel"
+                                                placeholder="Channel"
+                                                outlined/>
+                                        </v-col>
+                                        <v-col sm="4" cols="4" outlined dense class="px-4 no_border" color="grayBg">
+                                            <label class="label font_14">{{ $t("District") }}</label>
+                                            <v-select
+                                                class=" mt-1"
+                                                v-model="contract.district"
+                                                :items="districts"
+                                                :item-text="(item) => `${item.code} - ${item.name}`"
+                                                item-value="id"
+                                                tage="District"
+                                                clearable
+                                                placeholder="District"
+                                                outlined/>
+                                        </v-col>
+                                    </v-row>
+                                </v-card>
                             </v-col>
-                            <v-col class="bigSide pr-2 py-0" sm="6" cols="12" style="transition: .3s ease-in;">
+                            <v-col class="bigSide pr-2 py-0" sm="4" cols="12" style="transition: .3s ease-in;">
                                 <div class="d-flex justify-end">
                                     <h3
                                         style="color: #b3b5bc; font-size:20px;"
@@ -197,12 +184,24 @@
                                 </div>
                                 <div class="rounded-4 mt-1 px-4 pt-4 grayBg">
                                     <v-row>
-                                        <v-col sm="6" cols="6" class="pt-3">
+                                        <v-col sm="12" cols="12" class="pt-3">
                                             <label class="label mb-0">{{ $t("location") }}</label>
                                             <v-select
                                                 class="mt-1"
-                                                v-model="segment"
-                                                :items="segments"
+                                                v-model="contract.location"
+                                                :items="locations"
+                                                item-value="id"
+                                                :item-text="(item) => `${item.code} - ${item.name}`"
+                                                :rules="[(v) => !!v['id'] || $t('is_required')]"
+                                                return-object
+                                                tage="sub Of"
+                                                placeholder="Sub Of"
+                                                outlined=""/>
+                                            <label class="label mb-0">{{ $t("sub_location") }}</label>
+                                            <v-select
+                                                class="mt-1"
+                                                v-model="contract.subLocation"
+                                                :items="subLocations"
                                                 item-value="id"
                                                 :item-text="(item) => `${item.code} - ${item.name}`"
                                                 :rules="[(v) => !!v['id'] || $t('is_required')]"
@@ -213,8 +212,8 @@
                                             <label class="label mb-0">{{ $t("box") }}</label>
                                             <v-select
                                                 class="mt-1"
-                                                v-model="location"
-                                                :items="locations"
+                                                v-model="contract.box"
+                                                :items="boxs"
                                                 item-value="id"
                                                 :item-text="(item) => `${item.code} - ${item.name}`"
                                                 :rules="[(v) => !!v['id'] || $t('is_required')]"
@@ -222,83 +221,194 @@
                                                 tage="Location"
                                                 placeholder="bu/location"
                                                 outlined=""/>
-                                            <label class="label font_14">{{ $t("Province") }}</label>
-                                            <v-select
-                                                class=" mt-1"
-                                                v-model="province"
-                                                :items="provinces"
-                                                :item-text="(item) => `${item.code} - ${item.name}`"
-                                                item-value="id"
-                                                tage="Province"
-                                                clearable
-                                                placeholder="Province"
-                                                outlined/>
-                                            <label class="label font_14">{{ $t("Commune") }}</label>
-                                            <v-select
-                                                class=" mt-1"
-                                                v-model="commune"
-                                                :items="communes"
-                                                item-value="id"
-                                                item-text="name"
-                                                return-object
-                                                tage="Sale Channel"
-                                                placeholder="Channel"
-                                                outlined/>
-                                        </v-col>
-                                        <v-col sm="6" cols="6" class="pt-3">
-                                            <label class="label mb-0">{{ $t("sub_location") }}</label>
-                                            <v-select
-                                                class="mt-1"
-                                                v-model="subLocation"
-                                                :items="subLocations"
-                                                item-value="id"
-                                                :item-text="(item) => `${item.code} - ${item.name}`"
-                                                :rules="[(v) => !!v['id'] || $t('is_required')]"
-                                                return-object
-                                                tage="sub Of"
-                                                placeholder="Sub Of"
-                                                outlined=""/>
-                                            <label class="label mb-0">{{ $t("country") }}</label>
-                                            <v-select
-                                                class="mt-1"
-                                                v-model="location"
-                                                :items="locations"
-                                                item-value="id"
-                                                :item-text="(item) => `${item.code} - ${item.name}`"
-                                                :rules="[(v) => !!v['id'] || $t('is_required')]"
-                                                return-object
-                                                tage="Location"
-                                                placeholder="bu/location"
-                                                outlined=""/>
-                                            <label class="label font_14">{{ $t("District") }}</label>
-                                            <v-select
-                                                class=" mt-1"
-                                                v-model="district"
-                                                :items="districts"
-                                                :item-text="(item) => `${item.code} - ${item.name}`"
-                                                item-value="id"
-                                                tage="District"
-                                                clearable
-                                                placeholder="District"
-                                                outlined/>
-                                            <label class="label font_14">{{ $t("village") }}</label>
-                                            <v-select
-                                                class=" mt-1"
-                                                v-model="village"
-                                                :items="villages"
-                                                item-value="id"
-                                                item-text="name"
-                                                return-object
-                                                tage="Sale Channel"
-                                                placeholder="Channel"
-                                                outlined/>
                                         </v-col>
                                     </v-row>
                                 </div>
                             </v-col>
+                            <v-col class="bigSide pr-2 py-1" sm="6" cols="12" style="transition: .3s ease-in;">
+                                <v-card outlined dense class="px-4 no_border" color="grayBg">
+                                    <v-row style="background-color: #fff;">
+                                        <v-col sm="12" cols="12" class="pt-4 pb-0 px-4">
+                                            <kendo-datasource
+                                                ref="serviceItemDS"
+                                                :data="serviceItems"
+                                                :change="dataSourceChanged"/>
+                                            <kendo-grid
+                                                id="gridServiceItem"
+                                                class="grid-function"
+                                                :data-source-ref="'serviceItemDS'"
+                                                :sortable="false"
+                                                :column-menu="true"
+                                                :editable="true"
+                                                v-on:databound="dataBound"
+                                                :scrollable-virtual="true">
+                                                <kendo-grid-column
+                                                    :command="{iconClass: 'k-icon k-i-trash', text: ' ', click: removeRow, className: 'btn-plus isEditable'}"
+                                                    :title="''"
+                                                    :width="63"
+                                                    :headerAttributes="{style:'text-align: left; background-color: #EDF1F5'}"/>
+                                                <kendo-grid-column
+                                                    :title="$t('no.')"
+                                                    :width="53"
+                                                    :column-menu="false"
+                                                    :template="rowNumberTmpl"
+                                                    :headerAttributes="{style: 'background-color: #EDF1F5;', class: 'text-products'}"
+                                                    :attributes="{style: 'text-align: products'}"/>
+                                                <kendo-grid-column
+                                                    :field="'item'"
+                                                    :title="$t('item')"
+                                                    :width="200"
+                                                    :template="itemTemplate"
+                                                    :editor="ItemDropDownEditor"
+                                                    :headerAttributes="{style: 'background-color: #EDF1F5'}"/>
+                                                <kendo-grid-column
+                                                    :field="'uom'"
+                                                    :title="$t('uom')"
+                                                    :width="120"
+                                                    :template="UOMTemplate"
+                                                    :editor="UOMDropDownEditor"
+                                                    :headerAttributes="{style:'text-align: left; background-color: #EDF1F5'}"
+                                                    :attributes="{style: 'text-align: left'}"/>
+                                                <kendo-grid-column
+                                                    :field="'price'"
+                                                    :title="$t('price')"
+                                                    :width="200"
+                                                    :template="'<span>#=price || 0#</span>'"
+                                                    :editor="numberEditor"
+                                                    :headerAttributes="{style:'text-align: left; background-color: #EDF1F5',}"
+                                                    :attributes="{style: 'text-align: right'}"/>
+                                                    <kendo-grid-column
+                                                    :field="'amount'"
+                                                    :title="$t('amount')"
+                                                    :width="200"
+                                                    :editable="() => {return false;}"
+                                                    :template="'<span>#=amount || 0#</span>'"
+                                                    :editor="numberEditor"
+                                                    :headerAttributes="{style:'text-align: left; background-color: #EDF1F5'}"
+                                                    :attributes="{style: 'text-align: right'}"/>
+                                                <kendo-grid-column
+                                                    :field="'vatTax'"
+                                                    :title="$t('vat')"
+                                                    :width="200"
+                                                    :template="vatTemplate"
+                                                    :editor="VatTaxDropDownEditor"
+                                                    :headerAttributes="{style:'text-align: left; background-color: #EDF1F5',}"
+                                                    :attributes="{ style: 'text-align: left' }"/>
+                                            </kendo-grid>
+                                        </v-col>
+                                        <v-col sm="12" cols="12" class="pt-2">
+                                            <v-btn
+                                                color="primary"
+                                                class="float-left btn_plus mr-2"
+                                                @click="addRow">
+                                                <v-icon size="" class="ma-1">mdi-plus</v-icon>
+                                            </v-btn>
+                                        </v-col>
+                                    </v-row>
+                                <v-divider/>
+                                </v-card>
+                            </v-col>
+                            <v-col class="bigSide pr-2 py-1" sm="6" cols="12" style="transition: .3s ease-in;">
+                                <v-card outlined dense class="px-4 no_border" color="grayBg">
+                                    <v-row style="background-color: #fff;">
+                                        <v-col sm="12" cols="12" class="pt-4 pb-0 px-4">
+                                            <kendo-datasource
+                                                ref="depositItemDS"
+                                                :data="depositItems"
+                                                :change="dataSourceChanged"/>
+                                            <kendo-grid
+                                                id="gridDepositItem"
+                                                class="grid-function"
+                                                :data-source-ref="'depositItemDS'"
+                                                :sortable="false"
+                                                :column-menu="true"
+                                                :editable="true"
+                                                v-on:databound="dataBound"
+                                                :scrollable-virtual="true">
+                                                <kendo-grid-column
+                                                    :command="{iconClass: 'k-icon k-i-trash', text: ' ', click: removeRowDeposit, className: 'btn-plus isEditable'}"
+                                                    :title="''"
+                                                    :width="63"
+                                                    :headerAttributes="{style:'text-align: left; background-color: #EDF1F5'}"/>
+                                                <kendo-grid-column
+                                                    :title="$t('no.')"
+                                                    :width="53"
+                                                    :column-menu="false"
+                                                    :template="rowNumberTmplDeposit"
+                                                    :headerAttributes="{style: 'background-color: #EDF1F5;', class: 'text-products'}"
+                                                    :attributes="{style: 'text-align: products'}"/>
+                                                <kendo-grid-column
+                                                    :field="'item'"
+                                                    :title="$t('item')"
+                                                    :width="200"
+                                                    :template="itemTemplate"
+                                                    :editor="ItemDropDownEditor"
+                                                    :headerAttributes="{style: 'background-color: #EDF1F5'}"/>
+                                                <kendo-grid-column
+                                                    :field="'uom'"
+                                                    :title="$t('uom')"
+                                                    :width="120"
+                                                    :template="UOMTemplate"
+                                                    :editor="UOMDropDownEditor"
+                                                    :headerAttributes="{style:'text-align: left; background-color: #EDF1F5'}"
+                                                    :attributes="{style: 'text-align: left'}"/>
+                                                <kendo-grid-column
+                                                    :field="'price'"
+                                                    :title="$t('price')"
+                                                    :width="200"
+                                                    :template="'<span>#=price || 0#</span>'"
+                                                    :editor="numberEditor"
+                                                    :headerAttributes="{style:'text-align: left; background-color: #EDF1F5',}"
+                                                    :attributes="{style: 'text-align: right'}"/>
+                                                    <kendo-grid-column
+                                                    :field="'amount'"
+                                                    :title="$t('amount')"
+                                                    :width="200"
+                                                    :editable="() => {return false;}"
+                                                    :template="'<span>#=amount || 0#</span>'"
+                                                    :editor="numberEditor"
+                                                    :headerAttributes="{style:'text-align: left; background-color: #EDF1F5'}"
+                                                    :attributes="{style: 'text-align: right'}"/>
+                                                <kendo-grid-column
+                                                    :field="'vatTax'"
+                                                    :title="$t('vat')"
+                                                    :width="200"
+                                                    :template="vatTemplate"
+                                                    :editor="VatTaxDropDownEditor"
+                                                    :headerAttributes="{style:'text-align: left; background-color: #EDF1F5',}"
+                                                    :attributes="{ style: 'text-align: left' }"/>
+                                            </kendo-grid>
+                                        </v-col>
+                                        <v-col sm="12" cols="12" class="pt-2">
+                                            <v-btn
+                                                color="primary"
+                                                class="float-left btn_plus mr-2"
+                                                @click="addRowDeposit">
+                                                <v-icon size="" class="ma-1">mdi-plus</v-icon>
+                                            </v-btn>
+                                        </v-col>
+                                    </v-row>
+                                <v-divider/>
+                                </v-card>
+                            </v-col>
+                            <v-col class="bigSide pr-2 py-1" sm="12" cols="12" style="transition: .3s ease-in;">
+                                <v-btn
+                                    outlined
+                                    class="text-capitalize  black--text float-left"
+                                    color="primary"
+                                    @click="cancel">{{ $t("cancel") }}
+                                </v-btn>
+                                <v-btn
+                                    style="margin-left: 10px !important"
+                                    class="float-right text-capitalize  white--text"
+                                    @click="onSaveClose()"
+                                    color="primary">{{ $t("save_pay") }}
+                                </v-btn>
+                            </v-col>
                         </v-row>
                     </v-card>
                 </v-col>
+                </v-form>
             </v-row>
             <LoadingMe :isLoading="showLoading" :fullPage="false" :myLoading="true"/>
         </v-container>
@@ -311,6 +421,7 @@ import {i18n} from "@/i18n";
 import DatePickerComponent from "@/components/custom_templates/DatePickerComponent";
 import {DropDownList} from "@progress/kendo-vue-dropdowns";
 import kendo from "@progress/kendo-ui";
+import ContractModel from "@/scripts/model/billing/Contract";
 const customerHandler = require("@/scripts/customerHandler");
 const productVariantHandler = require("@/scripts/productVariantHandler");
 const uomPriceHandler = require("@/scripts/uomPriceHandler");
@@ -324,6 +435,7 @@ const defaultItem = {[textField]: "Select customer...", [keyField]: null};
 const emptyItem = {[textField]: "loading ..."};
 const pageSize = 10;
 const loadingData = [];
+const contractModel = new ContractModel({});
 while (loadingData.length < pageSize) {
     loadingData.push({...emptyItem});
 }
@@ -343,30 +455,19 @@ export default {
         customerList: [],
         dataItemKey: "id",
         defaultItem: defaultItem,
-        contract: {
-            transactionDate: "",
-            number: "",
-            receivableAcc: {},
-            priceLevel: {}
-        },
+        contract: contractModel,
         priceLevel: [],
         textField: "numberName",
         filter: "",
         contractTypes: [],
-        segments: [],
-        segment: {},
         locations: [],
-        location: {},
         subLocations: [],
-        subLocation: {},
+        boxs: [],
+        countries: [],
         provinces: [],
-        province: {},
         districts: [],
-        district:{},
         communes: [],
-        commune: {},
         villages: [],
-        village: {},
         serviceItems: [],
         itemlist: {
             item: {},
@@ -377,6 +478,7 @@ export default {
         },
         receivableAcc: [],
         isPriceLevelChanged: false,
+        depositItems: []
     }),
     methods: {
         cancel() {
@@ -431,6 +533,12 @@ export default {
                 total = ds.total();
                 ds.insert(total, this.itemlist);
         },
+        addRowDeposit() {
+            window.console.log(1)
+            let ds = this.$refs.depositItemDS.kendoWidget(),
+                total = ds.total();
+                ds.insert(total, this.itemlist);
+        },
         removeRow(e) {
             e.preventDefault();
             const grid = kendo.jQuery("#gridServiceItem").data("kendoGrid"),
@@ -439,11 +547,27 @@ export default {
 
             if (dataSource.total() > 1) {
                 dataSource.remove(dataItem);
-                this.autoCalculate();
+                // this.autoCalculate();
+            }
+        },
+        removeRowDeposit(e){
+             e.preventDefault();
+            const grid = kendo.jQuery("#gridDepositItem").data("kendoGrid"),
+                dataSource = grid.dataSource,
+                dataItem = grid.dataItem($(e.currentTarget).closest("tr"));
+
+            if (dataSource.total() > 1) {
+                dataSource.remove(dataItem);
+                // this.autoCalculate();
             }
         },
         rowNumberTmpl(dataItem) {
             let ds = this.$refs.serviceItemDS.kendoWidget(),
+                index = ds.indexOf(dataItem);
+            return index + 1;
+        },
+        rowNumberTmplDeposit(dataItem){
+            let ds = this.$refs.depositItemDS.kendoWidget(),
                 index = ds.indexOf(dataItem);
             return index + 1;
         },
@@ -581,6 +705,9 @@ export default {
                                 account_type: itm.account_type,
                             };
                         });
+                        if(this.receivableAcc.length > 0){
+                            this.contract.receivableAcc = this.receivableAcc[0]
+                        }
                     });
                 }, 10);
             });
@@ -592,6 +719,9 @@ export default {
                     const strFilter = '?nature=sale'
                     priceLevelHandler.get(strFilter).then((res) => {
                         this.priceLevel = res;
+                        if(res.length > 0){
+                            this.contract.priceLevel = res[0]
+                        }
                     });
                 }, 10);
             });
@@ -624,7 +754,7 @@ export default {
                         break;
                     case "price":
                         try {
-                            amount = parseFloat(dataRow.price) * parseFloat(dataRow.qty);
+                            amount = parseFloat(dataRow.price) // parseFloat(dataRow.qty);
                             xAmount = amount * parseFloat(this.contract.txnRate);
 
                             dataRow.set("price", parseFloat(dataRow.price));
@@ -660,14 +790,14 @@ export default {
 
                                 dataRow.set("conversionRate", parseFloat(conversionRate));
                                 if (dataRow.uom) {
-                                    amount = parseFloat(dataRow.uom.price) * parseFloat(dataRow.qty);
+                                    amount = parseFloat(dataRow.uom.price) //* parseFloat(dataRow.qty);
                                     xAmount = amount * parseFloat(this.contract.txnRate);
 
                                     dataRow.set("price", parseFloat(dataRow.uom.price));
                                     dataRow.set("amount", amount);
                                     dataRow.set("exchangeAmount", xAmount);
                                 } else {
-                                    amount = parseFloat(dataRow.price) * parseFloat(dataRow.qty);
+                                    amount = parseFloat(dataRow.price) //* parseFloat(dataRow.qty);
                                     xAmount = amount * parseFloat(this.contract.txnRate);
 
                                     dataRow.set("price", parseFloat(dataRow.price));
@@ -688,7 +818,7 @@ export default {
                         break;
                     case "qty":
                         try {
-                            amount = parseFloat(dataRow.price) * parseFloat(dataRow.qty);
+                            amount = parseFloat(dataRow.price) //* parseFloat(dataRow.qty);
                             xAmount = amount * parseFloat(this.contract.txnRate);
 
                             dataRow.set("price", parseFloat(dataRow.price));
@@ -775,6 +905,7 @@ export default {
                 defaultTax: ''
             }
         },
+        onSaveClose(){},
     },
     computed: {
         validCustomer: function () {
