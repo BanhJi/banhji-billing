@@ -1,7 +1,7 @@
 <template>
     <v-row>
         <v-col sm="12" cols="12" class="pt-0">
-            <h2 class="mb-0 font_20">{{ $t('Locations') }}</h2>
+            <h2 class="mb-0 font_20">{{ $t('dimension') }}</h2>
             <!-- level1 Main -->
             <v-dialog v-model="dialogM1" max-width="400px">
                 <template v-slot:activator="{ on }">
@@ -12,7 +12,7 @@
                 </template>
                 <v-card>
                     <div class="modal_header">
-                        <v-card-title>{{ $t('level1') }}</v-card-title>
+                        <v-card-title>{{ $t('location') }}</v-card-title>
                         <v-icon class="btn_close" @click="dialogM1 = false">close</v-icon>
                     </div>
                     <v-card-text class="modal_text_content">
@@ -24,17 +24,17 @@
                                 <v-col sm="12" cols="12" class="pb-0">
                                     <label class="label">{{ $t('name') }}</label>
                                     <v-text-field class="mt-1"
-                                        v-model="main.name"
+                                        v-model="location.name"
                                         outlined
-                                        :rules="[v => !!v || $t('name_is_required'),v => (v && v.length > 2) || $t('character_3')]"
+                                        :rules="[v => !!v || $t('name_is_required')]"
                                         required
                                                   placeholder=""/>
                                     <label class="label">{{ $t('code') }}</label>
                                     <v-text-field class="mt-1"
-                                        v-model="main.code"
+                                        v-model="location.code"
                                         outlined
                                         :readonly="readonly"
-                                        :rules="[v => !!v || $t('code_is_required'),v => (v && v.length > 2) || $t('character_3')]"
+                                        :rules="[v => !!v || $t('code_is_required')]"
                                         required
                                         placeholder=""/>
                                 </v-col>
@@ -65,7 +65,7 @@
             <v-dialog v-model="dialogM2" max-width="400px">
                 <v-card>
                     <div class="modal_header">
-                        <v-card-title>{{ $t('level1') }}</v-card-title>
+                        <v-card-title>{{ $t('sub_location') }}</v-card-title>
                         <v-icon class="btn_close" @click="dialogM2 = false">close</v-icon>
                     </div>
                     <v-card-text class="modal_text_content">
@@ -77,20 +77,21 @@
                                 <v-col sm="12" cols="12" class="pb-0">
                                     <label class="label">{{ $t('name') }}</label>
                                     <v-text-field class="mt-1"
-                                        v-model="main.name"
+                                        v-model="location.name"
                                         outlined
                                         readonly
-                                        required/>
+                                        required
+                                        return-object/>
                                     <label class="label">{{ $t('name') }}</label>
                                     <v-text-field class="mt-1"
-                                        v-model="group.name"
+                                        v-model="subLocation.name"
                                         outlined
                                         :rules="[v => !!v || $t('name_is_required'),v => (v && v.length > 2) || $t('character_3')]"
                                         required
                                                   placeholder=""/>
                                     <label class="label">{{ $t('code') }}</label>
                                     <v-text-field class="mt-1"
-                                        v-model="group.code"
+                                        v-model="subLocation.code"
                                         outlined
                                         :readonly="readonly"
                                         :rules="[v => !!v || $t('code_is_required'),v => (v && v.length > 2) || $t('character_3')]"
@@ -111,7 +112,7 @@
                             </v-col>
                             <v-col sm="6" cols="6" class="py-0 text-right">
                                 <v-btn color="primary" class="px-3  white--text text-capitalize"
-                                       @click="onSaveClose">{{ $t('save_close') }}
+                                       @click="onSaveSubLocation">{{ $t('save_close') }}
                                 </v-btn>
                             </v-col>
                         </v-row>
@@ -124,7 +125,7 @@
             <v-dialog v-model="dialogM3" max-width="400px">
                 <v-card>
                     <div class="modal_header">
-                        <v-card-title>{{ $t('level1') }}</v-card-title>
+                        <v-card-title>{{ $t('box') }}</v-card-title>
                         <v-icon class="btn_close" @click="dialogM3 = false">close</v-icon>
                     </div>
                     <v-card-text class="modal_text_content">
@@ -136,20 +137,20 @@
                                 <v-col sm="12" cols="12" class="pb-0">
                                     <label class="label">{{ $t('name') }}</label>
                                     <v-text-field class="mt-1"
-                                        v-model="group.name"
+                                        v-model="subLocation.name"
                                         outlined
                                         readonly
                                         required/>
                                     <label class="label">{{ $t('name') }}</label>
                                     <v-text-field class="mt-1"
-                                        v-model="sub.name"
+                                        v-model="box.name"
                                         outlined
                                         :rules="[v => !!v || $t('name_is_required'),v => (v && v.length > 2) || $t('character_3')]"
                                         required
                                                   placeholder=""/>
                                     <label class="label">{{ $t('code') }}</label>
                                     <v-text-field class="mt-1"
-                                        v-model="sub.code"
+                                        v-model="box.code"
                                         outlined
                                         :readonly="readonly"
                                         :rules="[v => !!v || $t('code_is_required'),v => (v && v.length > 2) || $t('character_3')]"
@@ -170,7 +171,7 @@
                             </v-col>
                             <v-col sm="6" cols="6" class="py-0 text-right">
                                 <v-btn color="primary" class="px-3  white--text text-capitalize"
-                                       @click="onSaveClose">{{ $t('save_close') }}
+                                       @click="onSaveBox">{{ $t('save_close') }}
                                 </v-btn>
                             </v-col>
                         </v-row>
@@ -205,6 +206,7 @@
 </template>
 
 <script>
+const billingSettingHandler = require("@/scripts/billingSettingHandler")
 import kendo from "@progress/kendo-ui";
 import LoadingMe from "@/components/Loading";
 import { TreeList } from '@progress/kendo-treelist-vue-wrapper';
@@ -224,22 +226,18 @@ export default {
             dialogM2:    false,
             dialogM3:    false,
             editable:    false,
-            dimentsions: [
-                {id: 'mab-uuid-001',    parentId: null,           parentCode: null, parentName: null, type:"main",   name: "A01", code: "A01"},
-                {id: 'mab-uuid-002',    parentId: 'mab-uuid-001', parentCode:"A01", parentName: "A01", type:"group",   name: "S01", code: "S01"},
-                {id: 'mab-uuid-003',    parentId: 'mab-uuid-002', parentCode:"SO1", parentName: "S01", type:"sub",   name: "B01", code: "B01"}
-            ],
-            main: {
+            dimentsions: [],
+            location: {
                 id: '',
                 name: '',
                 code: '',
             },
-            group: {
+            subLocation: {
                 id: '',
                 name: '',
                 code: '',
             },
-            sub: {
+            box: {
                 id: '',
                 name: '',
                 code: '',
@@ -290,71 +288,81 @@ export default {
             if (!this.$refs.form.validate()) {
                     this.$refs.form.validate()
                     return
-                }
-                new Promise(resolve => {
-                    setTimeout(() => {
-                        resolve('resolved');
-                        let data = {
-                            "id":   this.main.id ? this.main.id : '',
-                            "name": this.main.name,
-                            "code": this.main.code
-                        }
-                        window.console.log('data',data)
-                    }, 300);
-                })
+            }
+            new Promise(resolve => {
+                setTimeout(() => {
+                    resolve('resolved');
+                    let data = {
+                        "id":   this.location.id ? this.location.id : '',
+                        "name": this.location.name,
+                        "code": this.location.code
+                    }
+                    window.console.log('data',data)
+                }, 300);
+            })
         },
         editChaild(e){
             e.preventDefault();
             let treeList = this.$refs.dimentsionsTreeList.kendoWidget()
             let dataItem = treeList.dataItem(kendo.jQuery(e.target).closest("tr"));
-            window.console.log(dataItem,1)
-            if(dataItem.type =="main"){
-                this.readonly = true
-                this.main = {
+            this.readonly = true
+            if(dataItem.type =="location"){
+                this.location = {
                     id:     dataItem.id,
                     name:   dataItem.name,
                     code:   dataItem.code,
                 }
                 this.dialogM1 = true
-            }else if(dataItem.type =="group"){
-                this.readonly = true
-                this.group = {
+            }else if(dataItem.type =="sub_location"){
+                this.subLocation = {
                     id:     dataItem.id,
                     name:   dataItem.name,
                     code:   dataItem.code,
                 }
-                this.main = {
+                this.location = {
                     id: dataItem.parentId,
                     name: dataItem.parentName,
                     code: dataItem.parentCode,
                 }
                 this.dialogM2 = true
-            }
-        },
-        addChaild(e){
-            window.console.log(3,e)
-            e.preventDefault();
-            let treeList = this.$refs.dimentsionsTreeList.kendoWidget()
-            let dataItem = treeList.dataItem(kendo.jQuery(e.target).closest("tr"));
-            if(dataItem.type == "main"){
-                this.main = {
+            }else if(dataItem.type =="box"){
+                this.subLocation = {
+                    id:     dataItem.parentId,
+                    name:   dataItem.parentName,
+                    code:   dataItem.parentCode,
+                }
+                this.box = {
                     id:     dataItem.id,
                     name:   dataItem.name,
                     code:   dataItem.code,
                 }
-                this.group = {
+                this.dialogM3 = true
+            }
+        },
+        addChaild(e){
+            e.preventDefault();
+            let treeList = this.$refs.dimentsionsTreeList.kendoWidget()
+            let dataItem = treeList.dataItem(kendo.jQuery(e.target).closest("tr"));
+            this.readonly = false
+            if(dataItem.type == "location"){
+                this.location = {
+                    id:     dataItem.id,
+                    name:   dataItem.name,
+                    code:   dataItem.code,
+                }
+                this.subLocation = {
                     id: '',
                     name: '',
                     code: '',
                 }
                 this.dialogM2 = true
-            }else if(dataItem.type =="group"){
-                this.group = {
+            }else if(dataItem.type =="sub_location"){
+                this.subLocation = {
                     id:     dataItem.id,
                     name:   dataItem.name,
                     code:   dataItem.code,
                 }
-                this.sub = {
+                this.box = {
                     id: '',
                     name: '',
                     code: '',
@@ -379,13 +387,90 @@ export default {
 
                 /* Parent in bold */
                 window.console.log(row.find("[data-command='customedit']"),'row.find', dataItem)
-                if(dataItem.get("type") ===`sub`){
+                if(dataItem.get("type") ===`box`){
                     // row.find("[data-command='customedit']").hide();
                     row.find("[data-command='customadd']").hide();
                     row.css("font-weight", "bold");
                 }
             }
         },
+        async loadDimension() {
+            let param= {
+                type: "location"
+            }
+            new Promise(resolve => {
+                setTimeout(() => {
+                    resolve('resolved');
+                    billingSettingHandler.getDimension(param).then(res => {
+                        if(res.data.statusCode === 200){
+                            window.console.log(res.data,11)
+                            this.dimentsions = res.data.data
+                        }
+                        
+                    })
+                }, 300);
+            })
+        },
+        onSaveSubLocation(){
+            if (!this.$refs.form.validate()) {
+                    this.$refs.form.validate()
+                    return
+            }
+            new Promise(resolve => {
+                setTimeout(() => {
+                    resolve('resolved');
+                    let data = {
+                        id:               this.subLocation.id || "",
+                        name:             this.subLocation.name,
+                        code:             this.subLocation.code,
+                        type:             "sub_location",
+                        parentId:         this.location.id || "",
+                        parentCode:       this.location.code || "",
+                        parentName:       this.location.name || "",
+                    }
+                    billingSettingHandler.createSubLocation(data).then(res => {
+                        if (res.data.statusCode === 201) {
+                            this.dialogM2 = false
+                            this.loadDimension()
+                        }
+                        
+                    })
+                    // createSubLocation
+                    window.console.log('data',data)
+                }, 300);
+            })
+        },
+        onSaveBox(){
+            if (!this.$refs.form.validate()) {
+                    this.$refs.form.validate()
+                    return
+            }
+            new Promise(resolve => {
+                setTimeout(() => {
+                    resolve('resolved');
+                    let data = {
+                        id:               this.box.id || "",
+                        name:             this.box.name,
+                        code:             this.box.code,
+                        type:             "box",
+                        parentId:         this.subLocation.id || "",
+                        parentCode:       this.subLocation.code || "",
+                        parentName:       this.subLocation.name || "",
+                    }
+                    window.console.log('data',data)
+                    billingSettingHandler.createSubLocation(data).then(res => {
+                        if (res.data.statusCode === 201) {
+                            this.dialogM3 = false
+                            this.loadDimension()
+                        }
+                        
+                    })
+                }, 300);
+            })
+        }
+    },
+    mounted: async function () {
+        await this.loadDimension()
     }
 }
 </script>

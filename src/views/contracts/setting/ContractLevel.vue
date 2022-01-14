@@ -90,9 +90,9 @@
 
 <script>
 import LoadingMe from "@/components/Loading";
-import kendo from "@progress/kendo-ui";
+// import kendo from "@progress/kendo-ui";
 // import {i18n} from '@/i18n'
-const serviceItemHandler = require("@/scripts/serviceItemHandler");
+const billingSettingHandler = require("@/scripts/billingSettingHandler")
 
 export default {
     props: {},
@@ -110,136 +110,35 @@ export default {
                 name: '',
                 abbr: '',
             },
-            currencies: []
         }
     },
     methods: {
-        editUsage(e){
-            e.preventDefault();
-            let treeList = this.$refs.tariffTreeList.kendoWidget()
-            let dataItem = treeList.dataItem(kendo.jQuery(e.target).closest("tr"));
-            window.console.log(dataItem,1)
-            if(dataItem.type =="usage"){
-                this.readonly = true
-                this.tariffItme = {
-                    id:     dataItem.id,
-                    name:   dataItem.name,
-                    usage:  dataItem.usage,
-                    price:  dataItem.price,
-                    parentId: dataItem.parentId,
-                    parentName: dataItem.parentName,
-                    type:   dataItem.type
-                }
-                this.tariff = {
-                    id: dataItem.parentId,
-                    name: dataItem.parentName
-                }
-                this.dialogM2 = true
-            }else{
-                this.tariff = {
-                    id: dataItem.id,
-                    name: dataItem.name,
-                    minimumCharge: dataItem.minimumCharge,
-                    minimumPrice: dataItem.minimumPrice,
-                    // serviceItem: dataItem.serviceItem
-                }
-                this.dialogM1 = true
-            }
-        },
-        addUsage(e){
-            window.console.log(3,e)
-            e.preventDefault();
-            let treeList = this.$refs.tariffTreeList.kendoWidget()
-            let dataItem = treeList.dataItem(kendo.jQuery(e.target).closest("tr"));
-            window.console.log(dataItem)
-            this.tariff = {
-                id: dataItem.id,
-                name: dataItem.name
-            }
-            this.dialogM2 = true
-
-        },
-        onDataBound (e) {
-            window.console.log(e.sender)
-            var headers = e.sender.thead.children();
-            for (var i = 0; i < headers.length; i++) {
-                var th = kendo.jQuery(headers[i]);
-                th.css("font-weight", "bold");
-                th.css("text-align", "center");
-            }
-
-            var items = e.sender.items();
-            for (var j = 0; j < items.length; j++) {
-                var dataItem = e.sender.dataItem(items[j]);
-                var row = kendo.jQuery(items[j]);
-
-                /* Parent in bold */
-                if(dataItem.get("type") ===`usage`){
-                    // row.find("[data-command='customedit']").hide();
-                    row.find("[data-command='tariffadd']").hide();
-                    row.css("font-weight", "bold");
-                }
-            }
-
-            let treeList = this.$refs.tariffTreeList.kendoWidget()
-            treeList.hideColumn("usage");
-            treeList.hideColumn("price");
-            treeList.bind("expand", this.expand);
-            treeList.bind("collapse", this.collapse);
-        },
         onSaveClose(){
-
-        },
-        async loadProducts() {
-            this.showLoading = true;
-            new Promise((resolve) => {
+            if (!this.$refs.form.validate()) {
+                    this.$refs.form.validate()
+                    return
+            }
+            new Promise(resolve => {
                 setTimeout(() => {
-                    resolve("resolved");
-                    this.isLoaded = true;
-                    this.showLoading = true;
-                    let cateId = "",
-                        groupId = "",
-                        search = "";
-                    if (this.mCategory) {
-                        cateId = this.mCategory.id;
+                    resolve('resolved');
+                    let data = {
+                        id:               this.contractLevel.id || "",
+                        name:             this.contractLevel.name,
+                        code:             this.contractLevel.abbr,
                     }
-                    if (this.mGroup) {
-                        groupId = this.mGroup.id;
-                    }
-                    if (this.search) {
-                        search = this.search;
-                    }
-                    let strFilter = "?";
-                    if (cateId) {
-                        strFilter += "cateId=" + cateId;
-                    }
-                    if (groupId) {
-                        strFilter += "&groupId=" + groupId;
-                    }
-                    if (search) {
-                        strFilter += "&search=" + search;
-                    }
-                    // window.console.log('search', strFilter)
-                    serviceItemHandler.filter(strFilter).then((res) => {
-                        if (res.data.statusCode === 200) {
-                            this.showLoading = false;
-                            this.isLoaded = false;
-                            this.serviceItems = res.data.data;
+                    billingSettingHandler.createContractLevel(data).then(res => {
+                        if (res.data.statusCode === 201) {
+                            this.dialogM1 = false
+                            this.loadDimension()
                         }
-                    });
+                        
+                    })
+                    // createSubLocation
+                    window.console.log('data',data)
                 }, 300);
-            });
+            })
         },
-        expand() {
-            let treeList = this.$refs.tariffTreeList.kendoWidget()
-            treeList.showColumn("usage");
-            treeList.showColumn("price");
-        },
-        collapse(){
-            let treeList = this.$refs.tariffTreeList.kendoWidget()
-            treeList.hideColumn("usage");
-            treeList.hideColumn("price");
-        }
+
     },
     computed: {
     },

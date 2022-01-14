@@ -125,8 +125,8 @@
                                                 item-value="id"
                                                 item-text="name"
                                                 return-object
-                                                tage="Sale Channel"
-                                                placeholder="Channel"
+                                                tage="Commune"
+                                                placeholder="Commune"
                                                 outlined/>
                                         </v-col>
                                         <v-col sm="4" cols="4" outlined dense class="px-4 no_border" color="grayBg">
@@ -149,8 +149,8 @@
                                                 item-value="id"
                                                 item-text="name"
                                                 return-object
-                                                tage="Sale Channel"
-                                                placeholder="Channel"
+                                                tage="Village"
+                                                placeholder="Village"
                                                 outlined/>
                                         </v-col>
                                         <v-col sm="4" cols="4" outlined dense class="px-4 no_border" color="grayBg">
@@ -194,8 +194,9 @@
                                                 :item-text="(item) => `${item.code} - ${item.name}`"
                                                 :rules="[(v) => !!v['id'] || $t('is_required')]"
                                                 return-object
-                                                tage="sub Of"
-                                                placeholder="Sub Of"
+                                                tage="Location"
+                                                placeholder="Location"
+                                                @change="locationChange"
                                                 outlined=""/>
                                             <label class="label mb-0">{{ $t("sub_location") }}</label>
                                             <v-select
@@ -206,8 +207,9 @@
                                                 :item-text="(item) => `${item.code} - ${item.name}`"
                                                 :rules="[(v) => !!v['id'] || $t('is_required')]"
                                                 return-object
-                                                tage="sub Of"
-                                                placeholder="Sub Of"
+                                                tage="Sub Location"
+                                                placeholder="Sub Location"
+                                                @change="subLocationChange"
                                                 outlined=""/>
                                             <label class="label mb-0">{{ $t("box") }}</label>
                                             <v-select
@@ -216,10 +218,9 @@
                                                 :items="boxs"
                                                 item-value="id"
                                                 :item-text="(item) => `${item.code} - ${item.name}`"
-                                                :rules="[(v) => !!v['id'] || $t('is_required')]"
                                                 return-object
-                                                tage="Location"
-                                                placeholder="bu/location"
+                                                tage="Box"
+                                                placeholder="Box"
                                                 outlined=""/>
                                         </v-col>
                                     </v-row>
@@ -428,6 +429,8 @@ const uomPriceHandler = require("@/scripts/uomPriceHandler");
 const accountHandler = require("@/scripts/handler/accounting/account");
 const priceLevelHandler = require("@/scripts/priceLevelHandler");
 const settingHandler = require("@/scripts/settingHandler");
+// const locationHandler = require("@/scripts/locationHandler")
+const billingSettingHandler = require("@/scripts/billingSettingHandler")
 const textField = "numberName";
 const keyField = "id";
 const $ = kendo.jQuery
@@ -478,7 +481,8 @@ export default {
         },
         receivableAcc: [],
         isPriceLevelChanged: false,
-        depositItems: []
+        depositItems: [],
+        dimentsions: []
     }),
     methods: {
         cancel() {
@@ -906,6 +910,43 @@ export default {
             }
         },
         onSaveClose(){},
+        // async loadLocation() {
+        //     new Promise(resolve => {
+        //         setTimeout(() => {
+        //             resolve('resolved');
+        //             locationHandler.list().then(res => {
+        //                 if(res.data.statusCode === 200){
+        //                     this.locations = res.data.data
+        //                 }
+                        
+        //             })
+        //         }, 300);
+        //     })
+        // },
+        async loadDimension() {
+            let param= {
+                type: "dimension"
+            }
+            new Promise(resolve => {
+                setTimeout(() => {
+                    resolve('resolved');
+                    billingSettingHandler.getDimension(param).then(res => {
+                        if(res.data.statusCode === 200){
+                            window.console.log(res.data,11)
+                            this.dimentsions = res.data.data
+                            this.locations   = this.dimentsions.filter(index => index.type =="location")
+                        }
+                    })
+                }, 300);
+            })
+        },
+        locationChange(){
+            this.subLocations = this.dimentsions.filter(index => index.parentId == this.contract.location.id) 
+        },
+        subLocationChange(){
+            this.boxs = this.dimentsions.filter(index => index.parentId == this.contract.subLocation.id) 
+            window.console.log('boxs', this.boxs)
+        }
     },
     computed: {
         validCustomer: function () {
@@ -921,7 +962,8 @@ export default {
     },
     mounted: async function () {
         this.requestData(0, this.filter, this.cusBaseUrl);
-         await this.loadAccount();
+        await this.loadAccount();
+        await this.loadDimension()
     }
 };
 </script>

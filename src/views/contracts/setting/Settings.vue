@@ -7,6 +7,14 @@
 						<v-icon left>mdi-pen</v-icon>
 					</span>
 					<span class="hidden-sm-and-down text-capitalize">
+						{{ $t("dimension") }}
+					</span>
+				</v-tab>
+				<v-tab>
+					<span class="hidden-sm-and-up">
+						<v-icon left>mdi-pen</v-icon>
+					</span>
+					<span class="hidden-sm-and-down text-capitalize">
 						{{ $t("tariff") }}
 					</span>
 				</v-tab>
@@ -34,6 +42,13 @@
 						{{ $t("contract_level") }}
 					</span>
 				</v-tab>
+				<v-tab-item>
+					<v-row>
+						<v-col sm="12" cols="12" class="pl-6 pt-0">
+							<Dimension />
+						</v-col>
+					</v-row>
+				</v-tab-item>
 				<v-tab-item>
 					<v-row>
 						<v-col sm="12" cols="12" class="pl-6 pt-0">
@@ -72,6 +87,7 @@ export default {
 	data: () => ({}),
 	props: {},
 	components: {
+		Dimension:() =>import("./Dimension"),
 		Tariff: () =>import("./Tariff"),
 		Exemption: () =>import("./Exemption"),
 		Plan: () =>import("./Plan"),

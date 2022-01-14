@@ -45,11 +45,6 @@
                       </v-tab>
                       <v-tab :key="4" v-if="type != 'npo'">
                         <span>
-                          {{ $t("dimension") }}
-                        </span>
-                      </v-tab>
-                      <v-tab :key="4" v-if="type != 'npo'">
-                        <span>
                           {{ $t("setting") }}
                         </span>
                       </v-tab>
@@ -402,13 +397,6 @@
                   <v-tab-item v-if="type != 'npo'">
                     <v-card flat>
                       <v-card-text class="">
-                        <Dimension />
-                      </v-card-text>
-                    </v-card>
-                  </v-tab-item>
-                  <v-tab-item v-if="type != 'npo'">
-                    <v-card flat>
-                      <v-card-text class="">
                         <Setting />
                       </v-card-text>
                     </v-card>
@@ -464,8 +452,7 @@ export default {
     //  get from share_funding folder
     FundingTab: () => import("@/views/share_funding/funding/FundingTab"),
     CustomersDonorTab: () =>
-      import("@/views/share_funding/donor/CustomersDonorTab"),
-    Dimension: () =>import("./dimension/Dimensions")
+      import("@/views/share_funding/donor/CustomersDonorTab")
   },
   data: () => ({
     // active_tab: data.customer_tab.main

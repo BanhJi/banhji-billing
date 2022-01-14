@@ -46,6 +46,7 @@ const price_promotion   = require("./api/price-promotion")
 const item              = require("./api/item")
 const dashboard         = require("./api/dashboard")
 const financing         = require("./api/financing")
+const billing_setting   = require("./api/billing-setting")
 
 module.exports = {
     // INSTITUTE
@@ -192,4 +193,6 @@ module.exports = {
 
     //Dashboard
     dashboard                           : dashboard,
+
+    billing_setting                     : billing_setting
 }
