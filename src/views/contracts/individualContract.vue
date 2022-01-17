@@ -48,7 +48,7 @@
                                             <v-row class="mt-1 mr-0">
                                                 <v-col sm="3" cols="3" class="py-0 pr-0">
                                                     <div class="code_text text-bold">
-                                                        AAA
+                                                        CL
                                                     </div>
                                                 </v-col>
                                                 <v-col sm="7" cols="7" class="py-0 pl-0 pr-1">
@@ -72,8 +72,8 @@
                                             <label class="label mb-0">{{ $t("contract_type") }}</label>
                                             <v-select
                                                 class="mt-1"
-                                                v-model="contract.contractTypes"
-                                                :items="contractTypes"
+                                                v-model="contract.contractLevel"
+                                                :items="contractLevels"
                                                 item-value="id"
                                                 item-text="name"
                                                 :rules="[(v) => !!v || 'contract type is required']"
@@ -110,11 +110,12 @@
                                                 class="mt-1"
                                                 v-model="contract.country"
                                                 :items="countries"
-                                                item-value="id"
-                                                :item-text="(item) => `${item.code} - ${item.name}`"
-                                                :rules="[(v) => !!v['id'] || $t('is_required')]"
+                                                item-value="abbreviation"
+                                                :item-text="(item) =>`${item.abbreviation} - ${item.country}`"
+                                                :rules="[(v) => !!v['abbreviation'] || $t('is_required')]"
                                                 return-object
                                                 tage="Country"
+                                                @change="onChangeCountry"
                                                 placeholder="Country"
                                                 outlined=""/>
                                             <label class="label font_14">{{ $t("Commune") }}</label>
@@ -124,6 +125,7 @@
                                                 :items="communes"
                                                 item-value="id"
                                                 item-text="name"
+                                                @change="onChangeCommune"
                                                 return-object
                                                 tage="Commune"
                                                 placeholder="Commune"
@@ -135,10 +137,12 @@
                                                 class=" mt-1"
                                                 v-model="contract.province"
                                                 :items="provinces"
-                                                :item-text="(item) => `${item.code} - ${item.name}`"
+                                                :item-text="(item) => `${item.name} - ${item.nameLocal}`"
                                                 item-value="id"
                                                 tage="Province"
+                                                return-object
                                                 clearable
+                                                @change="onChangeProvince"
                                                 placeholder="Province"
                                                 outlined/>
                                             <label class="label font_14">{{ $t("village") }}</label>
@@ -159,10 +163,12 @@
                                                 class=" mt-1"
                                                 v-model="contract.district"
                                                 :items="districts"
-                                                :item-text="(item) => `${item.code} - ${item.name}`"
+                                                :item-text="(item) => `${item.name} - ${item.nameLocal}`"
                                                 item-value="id"
                                                 tage="District"
+                                                @change="onChangeDistrict"
                                                 clearable
+                                                return-object
                                                 placeholder="District"
                                                 outlined/>
                                         </v-col>
@@ -244,7 +250,7 @@
                                                 v-on:databound="dataBound"
                                                 :scrollable-virtual="true">
                                                 <kendo-grid-column
-                                                    :command="{iconClass: 'k-icon k-i-trash', text: ' ', click: removeRow, className: 'btn-plus isEditable'}"
+                                                    :command="{iconClass: 'k-icon k-i-trash', text: ' ', click: removeRow}"
                                                     :title="''"
                                                     :width="63"
                                                     :headerAttributes="{style:'text-align: left; background-color: #EDF1F5'}"/>
@@ -314,71 +320,65 @@
                                     <v-row style="background-color: #fff;">
                                         <v-col sm="12" cols="12" class="pt-4 pb-0 px-4">
                                             <kendo-datasource
-                                                ref="depositItemDS"
-                                                :data="depositItems"
-                                                :change="dataSourceChanged"/>
-                                            <kendo-grid
-                                                id="gridDepositItem"
-                                                class="grid-function"
-                                                :data-source-ref="'depositItemDS'"
-                                                :sortable="false"
-                                                :column-menu="true"
-                                                :editable="true"
-                                                v-on:databound="dataBound"
-                                                :scrollable-virtual="true">
-                                                <kendo-grid-column
-                                                    :command="{iconClass: 'k-icon k-i-trash', text: ' ', click: removeRowDeposit, className: 'btn-plus isEditable'}"
-                                                    :title="''"
-                                                    :width="63"
-                                                    :headerAttributes="{style:'text-align: left; background-color: #EDF1F5'}"/>
-                                                <kendo-grid-column
-                                                    :title="$t('no.')"
-                                                    :width="53"
-                                                    :column-menu="false"
-                                                    :template="rowNumberTmplDeposit"
-                                                    :headerAttributes="{style: 'background-color: #EDF1F5;', class: 'text-products'}"
-                                                    :attributes="{style: 'text-align: products'}"/>
-                                                <kendo-grid-column
-                                                    :field="'item'"
-                                                    :title="$t('item')"
-                                                    :width="200"
-                                                    :template="itemTemplate"
-                                                    :editor="ItemDropDownEditor"
-                                                    :headerAttributes="{style: 'background-color: #EDF1F5'}"/>
-                                                <kendo-grid-column
-                                                    :field="'uom'"
-                                                    :title="$t('uom')"
-                                                    :width="120"
-                                                    :template="UOMTemplate"
-                                                    :editor="UOMDropDownEditor"
-                                                    :headerAttributes="{style:'text-align: left; background-color: #EDF1F5'}"
-                                                    :attributes="{style: 'text-align: left'}"/>
-                                                <kendo-grid-column
-                                                    :field="'price'"
-                                                    :title="$t('price')"
-                                                    :width="200"
-                                                    :template="'<span>#=price || 0#</span>'"
-                                                    :editor="numberEditor"
-                                                    :headerAttributes="{style:'text-align: left; background-color: #EDF1F5',}"
-                                                    :attributes="{style: 'text-align: right'}"/>
+                                                    ref="depositItemDS"
+                                                    :change="changedDeposit"
+                                                    :data="depositLine"/>
+                                                <kendo-grid
+                                                    id="gridSaleDeposit"
+                                                    class="grid-function"
+                                                    :data-source-ref="'depositItemDS'"
+                                                    :sortable="false"
+                                                    :filterable="false"
+                                                    :column-menu="true"
+                                                    :editable="true"
+                                                    :scrollable-virtual="true">
                                                     <kendo-grid-column
-                                                    :field="'amount'"
-                                                    :title="$t('amount')"
-                                                    :width="200"
-                                                    :editable="() => {return false;}"
-                                                    :template="'<span>#=amount || 0#</span>'"
-                                                    :editor="numberEditor"
-                                                    :headerAttributes="{style:'text-align: left; background-color: #EDF1F5'}"
-                                                    :attributes="{style: 'text-align: right'}"/>
-                                                <kendo-grid-column
-                                                    :field="'vatTax'"
-                                                    :title="$t('vat')"
-                                                    :width="200"
-                                                    :template="vatTemplate"
-                                                    :editor="VatTaxDropDownEditor"
-                                                    :headerAttributes="{style:'text-align: left; background-color: #EDF1F5',}"
-                                                    :attributes="{ style: 'text-align: left' }"/>
-                                            </kendo-grid>
+                                                        :command="{iconClass: 'k-icon k-i-trash', text: ' ', click: removeRowDeposit}"
+                                                        :title="''"
+                                                        :width="63"
+                                                        :headerAttributes="{style: 'text-align: left; background-color: #EDF1F5'}"/>
+                                                    <kendo-grid-column
+                                                        :title="$t('no.')"
+                                                        :width="54"
+                                                        :template="rowNumberTmplDeposit"
+                                                        :column-menu="false"
+                                                        :headerAttributes="{style: 'background-color: #EDF1F5;', class: 'text-products'}"
+                                                        :attributes="{style: 'text-align: products'}"/>
+                                                    <kendo-grid-column
+                                                        :field="'paymentOption'"
+                                                        :title="$t('payment_option')"
+                                                        :width="250"
+                                                        :template="methodTemplate"
+                                                        :editor="PaymentOptionEditor"
+                                                        :headerAttributes="{style: 'background-color: #EDF1F5'}"/>
+                                                    <kendo-grid-column
+                                                        :field="'account'"
+                                                        :title="$t('account')"
+                                                        :width="200"
+                                                        :editable="() => {return false}"
+                                                        :template="accountTemplate"
+                                                        :headerAttributes="{style: 'background-color: #EDF1F5'}"/>
+                                                    <kendo-grid-column
+                                                        :field="'description'"
+                                                        :title="$t('description')"
+                                                        :width="200"
+                                                        :template="'<span>#=description#</span>'"
+                                                        :headerAttributes="{style: 'background-color: #EDF1F5'}"/>
+                                                    <kendo-grid-column
+                                                        :field="'amount'"
+                                                        :title="$t('amount')"
+                                                        :width="200"
+                                                        :template="amountTemplate"
+                                                        :editor="amountEditor"
+                                                        :headerAttributes="{style:'text-align: right; background-color: #EDF1F5'}"
+                                                        :attributes="{style: 'text-align: right'}"/>
+                                                    <kendo-grid-column
+                                                        :field="'refNo'"
+                                                        :title="$t('payment_ref')"
+                                                        :width="200"
+                                                        :headerAttributes="{style: 'text-align: right; background-color: #EDF1F5'}"
+                                                        :attributes="{style: 'text-align: right'}"/>
+                                                </kendo-grid>
                                         </v-col>
                                         <v-col sm="12" cols="12" class="pt-2">
                                             <v-btn
@@ -423,22 +423,31 @@ import DatePickerComponent from "@/components/custom_templates/DatePickerCompone
 import {DropDownList} from "@progress/kendo-vue-dropdowns";
 import kendo from "@progress/kendo-ui";
 import ContractModel from "@/scripts/model/billing/Contract";
+import SaleDepositModel from "@/scripts/sale_deposit/model/SaleDeposit";
+import PaymentOptionEditor from "@/scripts/kendo_editor/PaymentOptionEditor";
+import ItemLineModel from "@/scripts/sale_deposit/model/ItemLine";
+import InvoiceModel from "@/scripts/invoice/model/Invoice";
+// import ItemLineModel from "@/scripts/invoice/model/ItemLine";
 const customerHandler = require("@/scripts/customerHandler");
 const productVariantHandler = require("@/scripts/productVariantHandler");
 const uomPriceHandler = require("@/scripts/uomPriceHandler");
 const accountHandler = require("@/scripts/handler/accounting/account");
 const priceLevelHandler = require("@/scripts/priceLevelHandler");
 const settingHandler = require("@/scripts/settingHandler");
+const otherHandler = require("@/scripts/otherHandler");
 // const locationHandler = require("@/scripts/locationHandler")
 const billingSettingHandler = require("@/scripts/billingSettingHandler")
 const textField = "numberName";
 const keyField = "id";
+const OPTION_TYPE = "Customer";
 const $ = kendo.jQuery
 const defaultItem = {[textField]: "Select customer...", [keyField]: null};
 const emptyItem = {[textField]: "loading ..."};
 const pageSize = 10;
 const loadingData = [];
 const contractModel = new ContractModel({});
+const saleDepositModel = new SaleDepositModel({});
+const itemLineModel = new ItemLineModel({});
 while (loadingData.length < pageSize) {
     loadingData.push({...emptyItem});
 }
@@ -482,7 +491,13 @@ export default {
         receivableAcc: [],
         isPriceLevelChanged: false,
         depositItems: [],
-        dimentsions: []
+        dimentsions: [],
+        contractLevels: [],
+        country: [],
+        depositLine: [],
+        saleDeposit: saleDepositModel,
+        PaymentOptionEditor: PaymentOptionEditor,
+        itemLine: itemLineModel,
     }),
     methods: {
         cancel() {
@@ -496,9 +511,11 @@ export default {
                 cancelButtonColor: "#ED1A3A",
                 confirmButtonText: i18n.t("discard"),
             }).then((result) => {
+                window.console.log(result)
                 if (result.value) {
-                    this.clear();
-                    this.$router.go(-1);
+                    // this.clear();
+                    // this.$router.go(-1);
+                    this.$router.push({name: 'Contract'});
                 }
             });
         },
@@ -541,7 +558,8 @@ export default {
             window.console.log(1)
             let ds = this.$refs.depositItemDS.kendoWidget(),
                 total = ds.total();
-                ds.insert(total, this.itemlist);
+                ds.insert(total, this.itemLine);
+                this.itemLine.optionType = OPTION_TYPE;
         },
         removeRow(e) {
             e.preventDefault();
@@ -556,7 +574,7 @@ export default {
         },
         removeRowDeposit(e){
              e.preventDefault();
-            const grid = kendo.jQuery("#gridDepositItem").data("kendoGrid"),
+            const grid = kendo.jQuery("#gridSaleDeposit").data("kendoGrid"),
                 dataSource = grid.dataSource,
                 dataItem = grid.dataItem($(e.currentTarget).closest("tr"));
 
@@ -909,7 +927,126 @@ export default {
                 defaultTax: ''
             }
         },
-        onSaveClose(){},
+        onSaveClose(){
+            new Promise(resolve => {
+                setTimeout(() => {
+                    resolve('resolved');
+                    let data = new ContractModel({
+                        customer:           this.customer,
+                        receivableAcc:      this.contract.receivableAcc,
+                        number:             this.contract.number,
+                        contractLevel:      this.contract.contractLevel,
+                        priceLevel:         this.contract.priceLevel,
+                        country:            this.contract.country,
+                        province:           this.contract.province,
+                        district:           this.contract.district,
+                        commune:            this.contract.commune,
+                        village:            this.contract.village,
+                        transactionDate:    this.contract.transactionDate,
+                        abbr:               this.contract.abbr,
+                        location:           this.contract.location,
+                        subLocation:        this.contract.subLocation,
+                        box:                this.contract.box,
+                        invoiceId:          this.contract.invoiceId,
+                        invoice:            new InvoiceModel({
+                            id:                 this.contract.invoiceId || "",
+                            uuid:               this.contract.invoiceId || "",
+                            journal_uuid:       this.invoice.journal_uuid? this.invoice.journal_uuid: "",
+                            type:               "Invoice",
+                            number:             this.invoice.number,
+                            transactionDate:    this.contract.transactionDate,
+                            customer:           this.customer,
+                            receivableAcc:      this.contract.receivableAcc,
+                            location:           this.contract.location,
+                            rate:               1,
+                            priceLevel:         this.contract.priceLevel,
+                            dueDate:            this.contract.dueDate,
+
+
+                            // abbr:               this.invoice.transactionType.abbr,
+                            // monthOf:            this.invoice.monthOf,
+                            // transactionType:    this.invoice.transactionType,
+                            // paymentTerm:        this.invoice.paymentTerm,
+                            // approvedTerm:       this.invoice.approvedTerm,
+                            // currency:           this.invoice.currency,
+                            // txnRate:            this.invoice.txnRate,
+                            // taxExchangeRate:    this.invoice.taxExchangeRate,
+                            // exchangeRate:       this.invoice.exchangeRate,
+                            // exchangeAmount:     this.invoice.exchangeAmount,
+                            // itemLines:          dataRow,
+                            // segment:            this.invoice.segment,
+                            // saleChannel:        this.invoice.saleChannel,
+                            // employee:           this.invoice.employee,
+                            // billingAddress:     this.invoice.billingAddress,
+                            // deliveryAddress:    this.invoice.deliveryAddress,
+                            // deliveryDateTime:   this.invoice.deliveryDateTime,
+                            // transactionNote:    this.invoice.transactionNote,
+                            // journalNote:        this.invoice.journalNote,
+                            // subTotal:           this.invoice.subTotal,
+                            // exchangeSubTotal:   this.invoice.exchangeSubTotal,
+                            // total:              this.invoice.total,
+                            // exchangeTotal:      parseFloat(this.invoice.total) * parseFloat(this.invoice.txnRate),
+                            // discountTotal:      this.invoice.discountTotal,
+                            // specificDiscountTotal:  this.invoice.specificDiscountTotal,
+                            // deliveryFee:            this.invoice.deliveryFee,
+                            // totalTaxAmount:         this.invoice.totalTaxAmount,
+                            // depositAmount:          this.invoice.depositAmount,
+                            // depositDeduction:       this.invoice.depositDeduction,
+                            // remainingAmount:        this.invoice.remainingAmount,
+                            // amountDue:              this.invoice.amountDue,
+                            // currentBalance:         this.invoice.currentBalance,
+                            // balance:                this.invoice.balance,
+                            // creditLimit:            this.invoice.creditLimit,
+                            // saveOption:             this.invoice.saveOption,
+                            // status:                 1,
+                            // approvedBy:             this.invoice.approvedBy,
+                            // formTemplate:           this.templatesForm[this.template],
+                            // specificDiscountItem:   this.invoice.specificDiscountItem,
+                            // otherCharge:            this.mOtherCharge,
+                            // otherChargeLine:        this.invoice.otherChargeLine,
+                            // otherChargeAmount:      this.invoice.otherChargeAmount,
+                            // lateFee:                this.invoice.lateFee,
+                            // publicLink:             this.invoice.publicLink,
+                            // paymentCode:            this.invoice.paymentCode,
+                            // taxListTotal:           this.taxListTotal,
+                            // customerDiscountItem:       this.customerDiscountItem,
+                            // customerOtherChargeItem:    this.customer.customerOtherChargeItem,
+                            // customerSaleUnit:           this.customerSaleUnit,
+                            // customerSaleUnitLine:       this.customerSaleUnitLine,
+                            // paymentScheme:              this.invoice.paymentScheme,
+                            // createdAt:                  this.invoice.createdAt,
+                            // loggedUser:                 this.loggedUser,
+                            // isAutoGenerate:             isAutoGenerate,
+                            // jRaw:                       this.jRaw,
+                            // sourceTransaction:          sourceTxn,
+                            // itemSubtotal:               this.invoice.itemSubtotal,
+                            // exchangeItemSubtotal:       this.invoice.exchangeItemSubtotal,
+                            // serviceSubtotal:            this.invoice.serviceSubtotal,
+                            // exchangeServiceSubtotal:    this.invoice.exchangeServiceSubtotal,
+                            // txnItmSubtotal:             this.invoice.txnItmSubtotal,
+                            // exchangeTxnItmSubtotal:     this.invoice.exchangeTxnItmSubtotal,
+                            // itemDiscount:               this.invoice.itemDiscount,
+                            // exchangeItemDiscount:       this.invoice.exchangeItemDiscount,
+                            // serviceDiscount:            this.invoice.serviceDiscount,
+                            // exchangeServiceDiscount:    this.invoice.exchangeServiceDiscount,
+                            // txnItmDiscount:             this.invoice.txnItmDiscount,
+                            // exchangeTxnItmDiscount:     this.invoice.exchangeTxnItmDiscount,
+                            // cashPayment:                new PaymentOptionModel(this.invoice.cashPayment),
+                            // qrPayment:                  new PaymentOptionModel(this.invoice.qrPayment),
+                            // bankTransfer:               new PaymentOptionModel(this.invoice.bankTransfer),
+                            // billPayment:                new PaymentOptionModel(this.invoice.billPayment),
+                            // refFrom:                    this.invoice.refFrom || [],
+                            // refTo:                      this.invoice.refTo || [],
+                            // saleTaxDetail:              this.invoice.saleTaxDetail || [],
+                            // cashBasicIncomeAcc:         this.invoice.cashBasicIncomeAcc || [],
+                            // actionType:                 this.$route.params.id ? this.$route.query.type : "new",
+                        })
+                    })
+                    
+                    window.console.log('data', data)
+                }, 300);
+            })
+        },
         // async loadLocation() {
         //     new Promise(resolve => {
         //         setTimeout(() => {
@@ -925,7 +1062,7 @@ export default {
         // },
         async loadDimension() {
             let param= {
-                type: "dimension"
+                type: "location"
             }
             new Promise(resolve => {
                 setTimeout(() => {
@@ -946,7 +1083,129 @@ export default {
         subLocationChange(){
             this.boxs = this.dimentsions.filter(index => index.parentId == this.contract.subLocation.id) 
             window.console.log('boxs', this.boxs)
-        }
+        },
+        async loadContractLevel(){
+            billingSettingHandler.getContractLevel().then(res => {
+                window.console.log('res',res)
+                if (res.data.statusCode === 200) {
+                    this.dialogM1 = false
+                    this.contractLevels = res.data.data
+                }
+                
+            })
+        },
+        async loadCountry() {
+            new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve("resolved");
+                    otherHandler.country().then((res) => {
+                        this.showLoading = false;
+                        this.countries = res;
+                        if(this.countries.length > 0){
+                            this.contract.country = this.countries.filter(index => index.country =="Cambodia").map(i => {
+                                return {
+                                    country:        i.country,
+                                    abbreviation:   i.abbreviation
+                                }
+                            })[0]
+                            this.onChangeCountry()
+                        }
+                    });
+                }, 10);
+            });
+        },
+        async onloadCountry(location, parent) {
+            billingSettingHandler.get(location, parent).then(res => {
+                this.country = res
+                window.console.log('coun', this.country)
+
+            })
+        },
+        onChangeCountry() {
+            let coun = this.country.filter(c => c.name == this.contract.country.country).map(i => {
+                return {id: i.id}
+            })[0]
+            billingSettingHandler.get('province', coun.id).then(res => {
+                this.provinces = res
+            })
+        },
+        onChangeProvince() {
+            let province = this.contract.province
+            window.console.log('province', province)
+            billingSettingHandler.get('district', province.id).then(res => {
+                this.districts = res
+                 window.console.log('districts',this.districts )
+            })
+        },
+        onChangeDistrict() {
+            let district =  this.contract.district
+            billingSettingHandler.get('commune', district.id).then(res => {
+                this.communes = res
+            })
+        },
+        onChangeCommune() {
+            let commune = this.contract.commune
+            billingSettingHandler.get('village', commune.id).then(res => {
+                this.villages = res
+            })
+        },
+        accountTemplate(dataItem) {
+            const acc = dataItem.account;
+            if (acc) {
+                return `<span>${acc.name ? acc.name : ``}</span>`;
+            } else {
+                return ``;
+            }
+        },
+        amountTemplate(dataItem) {
+            const amt = dataItem.amount;
+            if (amt) {
+                return kendo.toString(
+                    parseFloat(amt),
+                    `n2`
+                );
+            } else {
+                return kendo.toString(
+                    parseFloat(0),
+                    `n2`
+                );
+            }
+        },
+        amountEditor(container, options) {
+            kendo
+                .jQuery('<input data-bind="value:' + options.field + '"/>')
+                .appendTo(container)
+                .kendoNumericTextBox({
+                    min: 0,
+                    decimals: 30,
+                    format: `n2`,
+                });
+        },
+        methodTemplate(dataItem) {
+            const method = dataItem.paymentOption || {};
+            if (method) {
+                return `<span>${method.bankAccountName || ``}</span>`;
+            } else {
+                return ``;
+            }
+        },
+        changedDeposit(e) {
+            if (e.field) {
+                let dataRow = e.items[0],
+                    pOption = {};
+                switch (e.field) {
+                    case "paymentOption":
+                        pOption = dataRow.paymentOption || {};
+                        dataRow.set("account", pOption.account || {});
+                        break;
+                    default:
+                        break;
+                }
+                // if (e.field) {
+                //     this.autoCalculate();
+                // }
+            }
+        },
     },
     computed: {
         validCustomer: function () {
@@ -964,6 +1223,9 @@ export default {
         this.requestData(0, this.filter, this.cusBaseUrl);
         await this.loadAccount();
         await this.loadDimension()
+        await this.loadContractLevel()
+        await this.loadCountry()
+        await this.onloadCountry('country', 0)
     }
 };
 </script>
@@ -1205,4 +1467,3 @@ export default {
     height: 30px !important;
 }
 </style>
-ss

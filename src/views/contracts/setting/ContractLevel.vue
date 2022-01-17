@@ -28,9 +28,10 @@
                                         :rules="[v => !!v || $t('name_is_required')]"
                                         required
                                         placeholder=""/>
-                                    <label class="label">{{ $t('abbr *') }}</label>
+                                    <label class="label">{{ $t('code *') }}</label>
                                     <v-text-field class="mt-1"
-                                        v-model="contractLevel.abbr"
+                                        v-model="contractLevel.code"
+                                        :readonly="readonly"
                                         outlined
                                         :rules="[v => !!v || $t('name_is_required')]"
                                         required
@@ -66,9 +67,9 @@
                 type="loading"
                 :myLoading="true"/>
             <kendo-datasource ref="exemptionDS"
-                :data="exemptions"/>
+                :data="contractLevels"/>
                 <kendo-grid id="gridexamption" class="grid-function"
-                    ref="exemption"
+                    ref="contractLevels"
                     :data-source-ref="'exemptionDS'"
                     :editable="false">
                     <kendo-grid-column
@@ -79,10 +80,21 @@
                         :headerAttributes="{style: 'background-color: #EDF1F5'}"/>
                     <kendo-grid-column
                         :width="200"
-                        :field="'abbr'"
-                        :title="$t('abbr')"
-                        :template="'<span>#= abbr#</span>'"
+                        :field="'code'"
+                        :title="$t('code')"
+                        :template="'<span>#= code#</span>'"
                         :headerAttributes="{style: 'background-color: #EDF1F5'}"/>
+                    <kendo-grid-column
+                        :field="''"
+                        :title="$t('action')"
+                        :width="80"
+                        :command="{iconClass: 'k-icon k-i-edit', text: 'Edit', click: goEdit }"
+                        :headerAttributes="{
+                            style: 'text-align: center; background-color: #EDF1F5',
+                        }"
+                        :attributes="{
+                            style: 'text-align: center',
+                        }"/>
                 </kendo-grid>
         </v-col>
     </v-row>
@@ -90,7 +102,7 @@
 
 <script>
 import LoadingMe from "@/components/Loading";
-// import kendo from "@progress/kendo-ui";
+import kendo from "@progress/kendo-ui";
 // import {i18n} from '@/i18n'
 const billingSettingHandler = require("@/scripts/billingSettingHandler")
 
@@ -103,13 +115,14 @@ export default {
         return {
             showLoading: false,
             dialogM1: false,
-            exemptions: [{name: "E1", abbr: "GCL"}],
+            contractLevels: [],
             valid: false,
             contractLevel: {
                 id: '',
                 name: '',
-                abbr: '',
+                code: '',
             },
+            readonly: false
         }
     },
     methods: {
@@ -124,12 +137,13 @@ export default {
                     let data = {
                         id:               this.contractLevel.id || "",
                         name:             this.contractLevel.name,
-                        code:             this.contractLevel.abbr,
+                        code:             this.contractLevel.code,
                     }
                     billingSettingHandler.createContractLevel(data).then(res => {
                         if (res.data.statusCode === 201) {
                             this.dialogM1 = false
-                            this.loadDimension()
+                            this.clear()
+                            this.loadContractLevel()
                         }
                         
                     })
@@ -138,12 +152,41 @@ export default {
                 }, 300);
             })
         },
-
+        loadContractLevel(){
+            billingSettingHandler.getContractLevel().then(res => {
+                window.console.log('res',res)
+                if (res.data.statusCode === 200) {
+                    this.dialogM1 = false
+                    this.contractLevels = res.data.data
+                }
+                
+            })
+        },
+        goEdit(e){
+            e.preventDefault();
+            let treeList = this.$refs.contractLevels.kendoWidget()
+            let dataItem = treeList.dataItem(kendo.jQuery(e.target).closest("tr"));
+            this.contractLevel = {
+                id:     dataItem.id,
+                name:   dataItem.name,
+                code:   dataItem.code
+            }
+            this.readonly = true
+            this.dialogM1 = true
+        },
+        clear(){
+            this.contractLevel = {
+                id:     '',
+                name:   '',
+                code:   ''
+            }
+            this.readonly = false
+        }
     },
     computed: {
     },
     async mounted() {
-        await this.loadProducts()
+        await this.loadContractLevel()
     },
     watch: {},
 };

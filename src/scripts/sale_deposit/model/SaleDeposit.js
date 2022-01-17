@@ -34,9 +34,9 @@ export default class SaleDeposit {
             this.loggedUser                 = data.loggedUser || {}
             this.createdAt                  = data.createdAt || new Date().toISOString().substr(0, 10)
             this.dateFormat                 = institute.dateFormat
-
-            this.refFrom                        = data.refFrom || []
-            this.refTo                          = data.refTo || []
+            this.description                = data.description || ''
+            this.refFrom                    = data.refFrom || []
+            this.refTo                      = data.refTo || []
         }
 
     constuct(data) {

@@ -47,6 +47,7 @@ const item              = require("./api/item")
 const dashboard         = require("./api/dashboard")
 const financing         = require("./api/financing")
 const billing_setting   = require("./api/billing-setting")
+const location          = baseUrl + '/locations/'
 
 module.exports = {
     // INSTITUTE
@@ -194,5 +195,7 @@ module.exports = {
     //Dashboard
     dashboard                           : dashboard,
 
-    billing_setting                     : billing_setting
+    billing_setting                     : billing_setting,
+
+    location                            : location
 }

@@ -8,6 +8,7 @@ export default (container, options) => {
         data: []
     })
     const strFilter = options.model.payment_method_as || ''
+    window.console.log('options',options)
     
     // Define dropdownlist
     let ddl = kendo.jQuery('<input name="' + options.field + '"/>')

@@ -32,3 +32,19 @@ module.exports.createContractLevel = async (data) => {
         window.console.error(error)
     }
 }
+module.exports.getContractLevel = async () => {
+    try {
+        const response = await axios.get(apiUrl.billing_setting.contract_level_get)
+        return response
+    } catch (error) {
+        window.console.error(error)
+    }
+}
+module.exports.get = async (location, parent) =>{
+    try {
+      const response = await axios.get(apiUrl.location + 'location/' + location + '/' + parent + '/list')
+      return response.data.data
+    } catch (error) {
+      window.console.error(error)
+    }
+  }
