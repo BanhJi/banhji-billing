@@ -31,6 +31,10 @@
                                                     @filterchange="onFilterChange">
                                                 </dropdownlist>
                                             </v-col>
+                                            <label class="label  mb-0">{{ $t("due_date") }}</label>
+                                            <app-datepicker
+                                                :initialDate="invoice.dueDate"
+                                                @emitDate="invoice.dueDate = $event"/>
                                             <label class="label mb-0">{{ $t("accounts_receivable") }}</label>
                                             <v-select
                                                 class="mt-1"
@@ -79,6 +83,17 @@
                                                 :rules="[(v) => !!v || 'contract type is required']"
                                                 return-object
                                                 outlined/>
+                                            <label class="label mb-0">{{ $t("term") }}</label>
+                                            <v-select
+                                                class="mt-1"
+                                                v-model="invoice.paymentTerm"
+                                                :items="paymentTerms"
+                                                placeholder="Term"
+                                                :rules="[(v) => !!v['id'] || $t('is_required')]"
+                                                item-text="name"
+                                                item-value="id"
+                                                return-object
+                                                outlined/>
                                         </v-col>
                                         <v-col sm="4" cols="12" class="pb-0 pt-4">
                                             <label class="label  mb-0">{{ $t("date") }}</label>
@@ -93,11 +108,25 @@
                                                 :items="priceLevel"
                                                 item-value="id"
                                                 item-text="name"
+                                                @change="onPriceLevelChange"
                                                 return-object
                                                 placeholder="Price Level"
                                                 tage="Default Price Level"
                                                 outlined
                                                 :rules="[(v) => !!v['id'] || $t('is_required')]"/>
+                                            <v-col
+                                                sm="12"
+                                                col="12"
+                                                class="d-flex justify-space-between pt-0">
+                                                <div>
+                                                    <p class="label mb-0">{{ $t("currency") }}</p>
+                                                    <p class="label mb-0 mt-4">{{ currencyCode }}</p>
+                                                </div>
+                                                <div>
+                                                    <p class="label mb-0">{{ $t("rate") }}</p>
+                                                    <p class="label mb-0 mt-4">{{ transactionRate }}</p>
+                                                </div>
+                                            </v-col>
                                         </v-col>
                                     </v-row>
                                 </v-card>
@@ -124,7 +153,7 @@
                                                 v-model="contract.commune"
                                                 :items="communes"
                                                 item-value="id"
-                                                item-text="name"
+                                                :item-text="(item) => `${item.name} - ${item.nameLocal}`"
                                                 @change="onChangeCommune"
                                                 return-object
                                                 tage="Commune"
@@ -151,7 +180,7 @@
                                                 v-model="contract.village"
                                                 :items="villages"
                                                 item-value="id"
-                                                item-text="name"
+                                                :item-text="(item) => `${item.name} - ${item.nameLocal}`"
                                                 return-object
                                                 tage="Village"
                                                 placeholder="Village"
@@ -211,7 +240,6 @@
                                                 :items="subLocations"
                                                 item-value="id"
                                                 :item-text="(item) => `${item.code} - ${item.name}`"
-                                                :rules="[(v) => !!v['id'] || $t('is_required')]"
                                                 return-object
                                                 tage="Sub Location"
                                                 placeholder="Sub Location"
@@ -427,7 +455,9 @@ import SaleDepositModel from "@/scripts/sale_deposit/model/SaleDeposit";
 import PaymentOptionEditor from "@/scripts/kendo_editor/PaymentOptionEditor";
 import ItemLineModel from "@/scripts/sale_deposit/model/ItemLine";
 import InvoiceModel from "@/scripts/invoice/model/Invoice";
-// import ItemLineModel from "@/scripts/invoice/model/ItemLine";
+import {dataStore} from "@/observable/store";
+const settingsHandler = require("@/scripts/settingsHandler");
+const paymentTermHandler = require("@/scripts/settingsHandler");
 const customerHandler = require("@/scripts/customerHandler");
 const productVariantHandler = require("@/scripts/productVariantHandler");
 const uomPriceHandler = require("@/scripts/uomPriceHandler");
@@ -435,7 +465,7 @@ const accountHandler = require("@/scripts/handler/accounting/account");
 const priceLevelHandler = require("@/scripts/priceLevelHandler");
 const settingHandler = require("@/scripts/settingHandler");
 const otherHandler = require("@/scripts/otherHandler");
-// const locationHandler = require("@/scripts/locationHandler")
+const currencyHandler = require("@/scripts/currency/handler/currencyHandler");
 const billingSettingHandler = require("@/scripts/billingSettingHandler")
 const textField = "numberName";
 const keyField = "id";
@@ -448,6 +478,7 @@ const loadingData = [];
 const contractModel = new ContractModel({});
 const saleDepositModel = new SaleDepositModel({});
 const itemLineModel = new ItemLineModel({});
+const invoiceModel = new InvoiceModel({});
 while (loadingData.length < pageSize) {
     loadingData.push({...emptyItem});
 }
@@ -498,6 +529,10 @@ export default {
         saleDeposit: saleDepositModel,
         PaymentOptionEditor: PaymentOptionEditor,
         itemLine: itemLineModel,
+        currencyCode: '',
+        transactionRate: 1,
+        invoice: invoiceModel,
+        paymentTerms: []
     }),
     methods: {
         cancel() {
@@ -536,6 +571,7 @@ export default {
             }).then(this.afterFetch);
         },
         async onInvoiceDateChanged() {
+            await this.onPriceLevelChange()
         },
         onChange(event) {
             const value = event.value;
@@ -743,6 +779,7 @@ export default {
                         this.priceLevel = res;
                         if(res.length > 0){
                             this.contract.priceLevel = res[0]
+                            this.loadTransactionRate()
                         }
                     });
                 }, 10);
@@ -960,15 +997,15 @@ export default {
                             location:           this.contract.location,
                             rate:               1,
                             priceLevel:         this.contract.priceLevel,
-                            dueDate:            this.contract.dueDate,
-
+                            dueDate:            this.invoice.dueDate,
+                            monthOf:            this.contract.transactionDate,
+                            currency:           this.contract.priceLevel.currency,
+                            paymentTerm:        this.invoice.paymentTerm,
 
                             // abbr:               this.invoice.transactionType.abbr,
-                            // monthOf:            this.invoice.monthOf,
                             // transactionType:    this.invoice.transactionType,
-                            // paymentTerm:        this.invoice.paymentTerm,
                             // approvedTerm:       this.invoice.approvedTerm,
-                            // currency:           this.invoice.currency,
+                            
                             // txnRate:            this.invoice.txnRate,
                             // taxExchangeRate:    this.invoice.taxExchangeRate,
                             // exchangeRate:       this.invoice.exchangeRate,
@@ -976,7 +1013,6 @@ export default {
                             // itemLines:          dataRow,
                             // segment:            this.invoice.segment,
                             // saleChannel:        this.invoice.saleChannel,
-                            // employee:           this.invoice.employee,
                             // billingAddress:     this.invoice.billingAddress,
                             // deliveryAddress:    this.invoice.deliveryAddress,
                             // deliveryDateTime:   this.invoice.deliveryDateTime,
@@ -1094,6 +1130,13 @@ export default {
                 
             })
         },
+        async onloadCountry(location, parent) {
+            billingSettingHandler.get(location, parent).then(res => {
+                this.country = res
+                window.console.log('coun', this.country)
+
+            })
+        },
         async loadCountry() {
             new Promise((resolve) => {
                 setTimeout(() => {
@@ -1113,13 +1156,6 @@ export default {
                     });
                 }, 10);
             });
-        },
-        async onloadCountry(location, parent) {
-            billingSettingHandler.get(location, parent).then(res => {
-                this.country = res
-                window.console.log('coun', this.country)
-
-            })
         },
         onChangeCountry() {
             let coun = this.country.filter(c => c.name == this.contract.country.country).map(i => {
@@ -1206,6 +1242,93 @@ export default {
                 // }
             }
         },
+        onPriceLevelChange() {
+            this.isPriceLevelChanged = true
+            this.loadTransactionRate()
+            // this.clearUOMItem()
+            // this.loadLateFee()
+        },
+        async loadTransactionRate() {
+            new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve("resolved");
+                    const date = new Date(this.contract.transactionDate).toISOString().substr(0, 10);
+                    const priceLevel = this.contract.priceLevel || {};
+                    const currency = priceLevel.currency || {}
+                    const code = currency.code || ''
+                    if (code) {
+                        this.showLoading = true;
+                        currencyHandler.getLastExchangeRateByDate(date, code).then((res) => {
+                                if (res.data.statusCode === 200) {
+                                    this.showLoading = false;
+                                    this.exchangeRate = res.data.data[0];
+                                    this.currencyCode = this.exchangeRate.code;
+                                    window.console.log('exchangeRate',this.exchangeRate)
+                                    this.transactionRate = this.exchangeRate.rate;
+                                    this.showLoading = false;
+                                    // this.loadCustomerDepositBalance(this.customer.id);
+                                }
+                            });
+                    }
+                    // this.loadSaleOrder();
+                    // this.loadTransactionTaxRate();
+                }, 10);
+            });
+        },
+        async loadPaymentTerm() {
+            new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve("resolved");
+                    const strFilter = "?type=pmt-customer";
+                    paymentTermHandler.getPaymentTerm(strFilter).then((res) => {
+                        if (res.data.statusCode === 200) {
+                            this.showLoading = false;
+                            this.paymentTerms = res.data.data;
+                            // if (this.paymentTerms.length > 0) {
+                            //     this.invoice.paymentTerm = this.paymentTerms[0];
+                            // }
+                        }
+                    });
+                }, 10);
+            });
+        },
+        async loadSegment() {
+            window.console.log('dataStore.roleData', dataStore)
+            const roleType = dataStore.roleType || 0
+            if (roleType === 0) {
+                if (dataStore.roleData) {
+                    const roleData = dataStore.roleData || []
+                    const segment = roleData.filter(itm => itm.type === 'segment')
+                    const segmentDefault = segment.filter(m => m.isDefault === 1)
+                    this.segments = segment
+                    if (this.$route.params.id === undefined || this.$route.params.id === '') {
+                        if (segmentDefault.length > 0) {
+                            this.invoice.segment = segmentDefault[0];
+                        }
+                    }
+                }
+            } else if (roleType === 1) {
+                new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve("resolved");
+                        this.segments = [];
+                        settingsHandler
+                            .getSeg()
+                            .then((res) => {
+                                if (res.data.statusCode === 200) {
+                                    this.showLoading = false;
+                                    this.segments = res.data.data;
+                                    if (this.segments.length > 0) {
+                                        this.invoice.segment = this.segments[0];
+                                    }
+                                }
+                            })
+                    }, 10);
+                });
+            }
+
+
+        },
     },
     computed: {
         validCustomer: function () {
@@ -1221,11 +1344,12 @@ export default {
     },
     mounted: async function () {
         this.requestData(0, this.filter, this.cusBaseUrl);
+         await this.onloadCountry('country', 0)
         await this.loadAccount();
         await this.loadDimension()
         await this.loadContractLevel()
         await this.loadCountry()
-        await this.onloadCountry('country', 0)
+        await this.loadPaymentTerm()
     }
 };
 </script>

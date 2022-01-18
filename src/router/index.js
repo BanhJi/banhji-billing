@@ -1418,6 +1418,15 @@ const routes = [{
             }
         },
         {
+            path: 'batch_invoicing',
+            name: 'Batch Invoicing',
+            component: load('bills/billInvoice'),
+            meta: {
+                mainMenu: 'bills',
+                title: 'Bills',
+            }
+        },
+        {
             path: 'accounting',
             name: 'Accounting',
             component: load('accounting/Accounting'),
