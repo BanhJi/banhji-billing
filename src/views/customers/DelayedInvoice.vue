@@ -1100,6 +1100,10 @@ export default {
                 abbr: this.invoice.transactionType.abbr,
                 structure: this.invoice.transactionType.structure,
                 transactionDate: this.transactionDate,
+                prefixSeparator: this.invoice.transactionType.prefixSeparator || '',
+                numberSeparator: this.invoice.transactionType.numberSeparator || '',
+                format: this.invoice.transactionType.format || 5,
+                sequcencing: this.invoice.transactionType.sequcencing,
                 type: 'Delayed Invoice',
                 entity: 1
             }

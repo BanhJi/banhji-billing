@@ -3,6 +3,10 @@
         <v-col sm="12" cols="12" class="grayBg px-6">
             <v-card color="white" class="pa-3 no_border" elevation="0">
                 <v-row class="">
+                     <v-col sm="12" cols="12" class="py-0">
+                        <h2 class="mb-0 font_20">{{ $t("deposit_detail_by_customer") }}</h2>
+                        <p class="mb-2">{{ $t('deposit_balance_desc_txn') }}</p>
+                    </v-col>
                     <v-col sm="4" cols="12" class="py-0">
                         <v-select
                             class="mt-1"
@@ -141,7 +145,7 @@ export default {
     data: () => ({
         startDate: new Date().toISOString().substr(0, 10),
         endDate: new Date().toISOString().substr(0, 10),
-        dateSorters: ['Today', 'This Week', 'This Month', 'This Year'],
+        dateSorters:['Today', 'This Week', 'This Month', 'This Year', 'Last Month' , 'Last Year'],
         mDateSorter: 'Today',
         showLoading: false,
         transactions: [],
@@ -173,7 +177,15 @@ export default {
                 case "This Year":
                     this.startDate = kendo.toString(new Date(today.getFullYear(), 0, 1), 'yyyy-MM-dd')
                     this.endDate = kendo.toString(new Date(today.getFullYear(), 11, 31), 'yyyy-MM-dd')
-
+                 break
+                case "Last Month":
+                  this.startDate = kendo.toString(new Date(today.getFullYear(), today.getMonth(), -30), 'yyyy-MM-dd');
+                  this.endDate = kendo.toString(new Date(today.getFullYear(), today.getMonth() -1, +31), 'yyyy-MM-dd');
+        
+                  break
+                case "Last Year":
+                  this.startDate = kendo.toString(new Date(today.getFullYear(), -11, -30), 'yyyy-MM-dd');
+                  this.endDate = kendo.toString(new Date(today.getFullYear(), -1, +31), 'yyyy-MM-dd');
                     break
                 default:
                     this.startDate = ""

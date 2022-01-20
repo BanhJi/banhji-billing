@@ -1856,7 +1856,7 @@ export default {
             if (this.invoice) {
                 const cash = this.invoice.cashPayment || {}
                 if (cash.id) {
-                    return cash.code + "-" + cash.name
+                    return (cash.code || '') + "-" + (cash.name || '')
                 }
             }
             return "-";
@@ -2005,15 +2005,10 @@ export default {
         },
         employee() {
             if (this.invoice) {
-                if (this.invoice.hasOwnProperty("employee")) {
-                    if (this.invoice.employee.hasOwnProperty("id")) {
-                        return (
-                            this.invoice.employee.firstName +
-                            " - " +
-                            this.invoice.employee.lastName
-                        );
-                    }
-                }
+                const employee = this.invoice.employee || {}
+                const firstName = employee.firstName || ''
+                const lastName = employee.lastName || ''
+                return firstName + '-' + lastName
             }
             return "";
         },
@@ -2105,6 +2100,7 @@ export default {
         // window.console.log(this.visibleMe, 'Activated')
     },
     watch: {
+
         id() {
             if (this.$route.params.id === undefined) {
                 this.clear();

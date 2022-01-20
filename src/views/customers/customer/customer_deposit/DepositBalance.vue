@@ -4,6 +4,7 @@
             <v-card color="white" class="pa-3 no_border" elevation="0">
                 <v-row>
                     <v-col sm="12" cols="12" class="py-0">
+                      <!-- <h2 class="mb-0 font_20">{{ $t("deposit_summary_by_customer") }}</h2> -->
                         <p class="mb-2">{{ $t('deposit_balance_desc') }}</p>
                     </v-col>
                     <v-col sm="4" cols="12" class="py-0">

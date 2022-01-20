@@ -48,6 +48,18 @@
                                                     sm="12"
                                                     cols="12"
                                                     class="kendo_dropdown_custom px-0 pb-3 pt-0">
+                                                    <!--                                                    <div v-if="disabledMe">-->
+                                                    <!--                                                        <h3 class="text-bold  py-1">{{ customerName }}</h3>-->
+                                                    <!--                                                    </div>-->
+                                                    <!--                                                    <div v-else>-->
+                                                    <!--                                                        <customer-dropdownlist-->
+                                                    <!--                                                            :initAction="initAction"-->
+                                                    <!--                                                            :initCustomer="customer"-->
+                                                    <!--                                                            :initModel="invoice.customer"-->
+                                                    <!--                                                            :initDisabled="disabledMe"-->
+                                                    <!--                                                            @onChange="onCustomerDropdownChange"-->
+                                                    <!--                                                        />-->
+                                                    <!--                                                    </div>-->
                                                     <dropdownlist
                                                         :data-items="customerList"
                                                         @change="onChange"
@@ -58,6 +70,7 @@
                                                         :filterable="true"
                                                         :required="true"
                                                         :disabled="disabledMe"
+                                                        :loading="loading"
                                                         :valid="validCustomer"
                                                         @filterchange="onFilterChange">
                                                     </dropdownlist>
@@ -632,20 +645,20 @@
                                                                     {{ numberFormat(invoice.remainingAmount) }}
                                                                 </td>
                                                             </tr>
-                                                            <tr>
-                                                                <td class="text-left">dr</td>
-                                                                <td class="text-center">:</td>
-                                                                <td class="text-right color_green text-bold">
-                                                                    {{ numberFormat(invoice.dr) }}
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td class="text-left">cr</td>
-                                                                <td class="text-center">:</td>
-                                                                <td class="text-right color_green text-bold">
-                                                                    {{ numberFormat(invoice.cr) }}
-                                                                </td>
-                                                            </tr>
+                                                            <!--                                                            <tr>-->
+                                                            <!--                                                                <td class="text-left">dr</td>-->
+                                                            <!--                                                                <td class="text-center">:</td>-->
+                                                            <!--                                                                <td class="text-right color_green text-bold">-->
+                                                            <!--                                                                    {{ numberFormat(invoice.dr) }}-->
+                                                            <!--                                                                </td>-->
+                                                            <!--                                                            </tr>-->
+                                                            <!--                                                            <tr>-->
+                                                            <!--                                                                <td class="text-left">cr</td>-->
+                                                            <!--                                                                <td class="text-center">:</td>-->
+                                                            <!--                                                                <td class="text-right color_green text-bold">-->
+                                                            <!--                                                                    {{ numberFormat(invoice.cr) }}-->
+                                                            <!--                                                                </td>-->
+                                                            <!--                                                            </tr>-->
                                                             </tbody>
                                                         </template>
                                                     </v-simple-table>
@@ -848,6 +861,7 @@
                                                     :text-field="'name'"
                                                     :default-item="defaultItem"
                                                     :filterable="true"
+                                                    :loading="loading"
                                                     @filterchange="onEmployeeFilterChanged">
                                                 </dropdownlist>
                                             </v-col>
@@ -1262,7 +1276,7 @@
 <script>
 // import kendo from "@progress/kendo-ui"
 import {i18n} from "@/i18n";
-import DatePickerComponent from "@/components/custom_templates/DatePickerComponent";
+import CustomerModel from "@/scripts/model/Customer";
 import InvoiceModel from "@/scripts/invoice/model/Invoice";
 import ItemLineModel from "@/scripts/invoice/model/ItemLine";
 import {uuid} from "vue-uuid";
@@ -1329,15 +1343,19 @@ const strFilter = "?optionType=" + OPTION_TYPE;
 const DISCOUNT_TYPE = "?type=Sale";
 const cookieJS = require("@/cookie.js");
 const cookie = cookieJS.getCookie();
+
+const SECOND_DELAY = 1000;
 export default {
     name: "CustomerInvoice",
-    props: ["id", "transactionDate"],
+    // props: ["id", "transactionDate"],
     components: {
         LoadingMe: () => import(`@/components/Loading`),
-        "app-datepicker": DatePickerComponent,
+        "app-datepicker": () => import(`@/components/custom_templates/DatePickerComponent`),
+        // "customer-dropdownlist": () => import("@/components/dropdownlist/CustomerDropDownList"),
         dropdownlist: DropDownList,
     },
     data: () => ({
+        loading: false,
         isEdit: false,
         mOtherCharge: [],
         mOtherChargeAmount: [],
@@ -1360,11 +1378,11 @@ export default {
                 id: "id",
             },
         },
-        customer: {},
+        customer: new CustomerModel({}),
         defaultItem: defaultItem,
         invoice: invoiceModel,
         transactionType: ["Invoice", "Commercial Invoice", "Tax Invoice"],
-        cusBaseUrl: customerHandler.searchv1(),
+        cusBaseUrl: customerHandler.search(),
         empBaseUrl: employeeHandler.search(),
         init: {method: "GET", accept: "application/json", headers: []},
         pendingRequest: undefined,
@@ -1449,12 +1467,14 @@ export default {
             if (grid) {
                 items.each(function () {
                     let dataItem = grid.dataItem(this);
-                    $("tr[data-uid='" + dataItem.uid + "']").find('.isEditable')
-                        .each(function () {
-                            if (dataItem.isEditable === false) {
-                                $(this).addClass("k-state-disabled");
-                            }
-                        });
+                    if (dataItem) {
+                        $("tr[data-uid='" + dataItem.uid + "']").find('.isEditable')
+                            .each(function () {
+                                if (dataItem.isEditable === false) {
+                                    $(this).addClass("k-state-disabled");
+                                }
+                            });
+                    }
                 });
             }
         },
@@ -1765,7 +1785,7 @@ export default {
             }
         },
         UOMTemplate(dataItem) {
-            const uom = dataItem.uom;
+            const uom = dataItem.uom || {};
             const code = uom.code || ''
             if (uom) {
                 return `<span>${uom.uom ? code : ``}</span>`;
@@ -3070,7 +3090,6 @@ export default {
                                 otTax = this.taxMapping(this.otherTax, dataRow.uom.otherTax || {})
                                 spTax = this.taxMapping(this.specificTax, dataRow.uom.specificTax || {})
                                 plTax = this.taxMapping(this.publicLightingTax, dataRow.uom.publicLightingTax || {})
-
                                 dataRow.set("vatTax", vTax);
                                 dataRow.set("specificTax", spTax);
                                 dataRow.set("otherTax", otTax);
@@ -3080,7 +3099,6 @@ export default {
                                 if (dataRow.uom) {
                                     amount = parseFloat(dataRow.uom.price) * parseFloat(dataRow.qty);
                                     xAmount = amount * parseFloat(this.invoice.txnRate);
-
                                     dataRow.set("price", parseFloat(dataRow.uom.price));
                                     dataRow.set("amount", amount);
                                     dataRow.set("exchangeAmount", xAmount);
@@ -3093,7 +3111,7 @@ export default {
                                     dataRow.set("exchangeAmount", xAmount);
                                 }
                             } catch (err) {
-                                window.console.log("error", err);
+                                window.console.log("error------", err);
                                 dataRow.set("buom", {});
                                 dataRow.set("conversionRate", 1);
                                 dataRow.set("price", 0);
@@ -3101,6 +3119,7 @@ export default {
                                 dataRow.set("wac", 0);
                                 dataRow.set("amount", 0);
                                 dataRow.set("exchangeAmount", 0);
+                                break;
                             }
                         }
                         break;
@@ -3191,6 +3210,7 @@ export default {
                     filter: "contains",
                     dataTextField: "name",
                     dataValueField: "id",
+                    delay: SECOND_DELAY,
                     headerTemplate:
                         '<div class="dropdown-header k-widget k-header">' +
                         "<span>Items </span>" +
@@ -3537,6 +3557,7 @@ export default {
                     autoWidth: true,
                     height: 400,
                     suggest: true,
+                    delay: SECOND_DELAY,
                     filter: "contains",
                     dataTextField: "name",
                     dataValueField: "id",
@@ -4303,6 +4324,9 @@ export default {
                     structure: this.invoice.transactionType.structure,
                     transactionDate: this.invoice.transactionDate,
                     sequcencing: this.invoice.transactionType.sequcencing,
+                    prefixSeparator: this.invoice.transactionType.prefixSeparator || '',
+                    numberSeparator: this.invoice.transactionType.numberSeparator || '',
+                    format: this.invoice.transactionType.format || 5,
                     type: "Invoice",
                     entity: 1,
                 };
@@ -4383,40 +4407,9 @@ export default {
             const id = value.id || ''
             if (id !== '') {
                 window.console.log('value', value)
-                this.customer = value;
-                this.invoice.customer = value;
-                this.invoice.billPayment = this.customer.billPayment
-                this.invoice.qrPayment = this.customer.qrPayment
-                this.invoice.cashPayment = this.customer.cashPayment
-                this.invoice.bankTransfer = this.customer.bankTransfer
-                // window.console.log(this.invoice.customer, 'Changed')
-                // this.invoice = value
-                this.invoice.receivableAcc = value.receivableAcc || {}
-                // this.invoice.paymentTerm = value.hasOwnProperty("paymentTerm")
-                //     ? value.paymentTerm
-                //     : {};
-                this.invoice.priceLevel = value.priceLevel || {}
-                const baseCurrency = value.baseCurrency || {}
-                if (baseCurrency.hasOwnProperty("code")) {
-                    this.baseCurrencyCode = " " + baseCurrency.code;
-                }
-                const priceLevel = value.priceLevel || {}
-                const currency = priceLevel.currency || {}
-                const code = currency.code || ''
-                window.console.log('priceLevel: ' + JSON.stringify(priceLevel))
-                if (code !== '') {
-                    this.loadTransactionRate();
-                }
-                this.billingAddress = value.billingAddress || []
-                this.deliveryAddress = value.deliveryAddress || []
-                if (this.billingAddress.length > 0) {
-                    this.invoice.billingAddress = this.billingAddress[0];
-                }
-                if (this.deliveryAddress.length > 0) {
-                    this.invoice.deliveryAddress = this.deliveryAddress[0];
-                }
-                this.onInvoiceDateChanged();
-                this.loadProjectByCustomer();
+                this.loadCustomerDetail(id)
+                // this.customer = value;
+
             }
             // this.loadCustomerBalance(this.customer.id);
             // this.loadCreditLimit();
@@ -4439,13 +4432,26 @@ export default {
         },
         onFilterChange(event) {
             const filter = event.filter.value;
-            this.requestData(0, filter, this.cusBaseUrl);
-            this.filter = filter;
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                this.requestData(0, filter, this.cusBaseUrl);
+                this.filter = filter;
+                this.loading = false;
+            }, SECOND_DELAY);
+            this.loading = true;
+            // if (filter.length > 2) {
+            //
+            // }
         },
         onEmployeeFilterChanged(event) {
             const filter = event.filter.value;
-            this.requestData_(0, filter, this.empBaseUrl);
-            this.filter_ = filter;
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                this.requestData_(0, filter, this.empBaseUrl);
+                this.filter_ = filter;
+                this.loading = false;
+            }, SECOND_DELAY);
+            this.loading = true;
         },
         async initData() {
             if (this.$route.params.id !== undefined) {
@@ -4489,6 +4495,7 @@ export default {
                                     this.invoice = res.data.data[0];
                                     this.referenceNo = this.invoice.referenceNo;
                                     this.invoice.transactionDate = new Date(this.invoice.transactionDate);
+                                    this.invoice.transactionDateTZ = new Date(this.invoice.transactionDate).toJSON()
                                     this.customer = this.invoice.customer;
                                     this.mEmployee = this.invoice.employee;
                                     this.taxListTotal = this.invoice.taxListTotal;
@@ -4536,12 +4543,12 @@ export default {
         clear() {
             const term = this.invoice.paymentTerm || {}
             const priceL = this.invoice.priceLevel || {}
-            this.id = undefined;
+            // this.id = undefined;
             this.itemLines = []
             this.invoice = new InvoiceModel();
             this.invoice.paymentTerm = term
             this.invoice.priceLevel = priceL
-            this.customer = ''
+            this.customer = new CustomerModel({})
             this.employee = ''
             this.saleOrders = []
             this.invoice.transactionType = this.invoiceTypes[0];
@@ -4654,7 +4661,7 @@ export default {
             this.invoice = new InvoiceModel();
             this.invoice.paymentTerm = term
             this.invoice.priceLevel = priceL
-            this.customer = {}
+            this.customer = new CustomerModel({})
             this.mEmployee = {}
             this.saleOrders = []
             this.invoice.transactionType = this.invoiceTypes[0];
@@ -4663,9 +4670,121 @@ export default {
             this.loadLocation();
             this.addRow()
             // this.addRow()
-        }
+        },
+        onCustomerDropdownChange(value) {
+            this.customer = value
+            this.invoice.customer = value;
+            this.invoice.billPayment = this.customer.billPayment
+            this.invoice.qrPayment = this.customer.qrPayment
+            this.invoice.cashPayment = this.customer.cashPayment
+            this.invoice.bankTransfer = this.customer.bankTransfer
+            // window.console.log(this.invoice.customer, 'Changed')
+            // this.invoice = value
+            this.invoice.receivableAcc = value.receivableAcc || {}
+            // this.invoice.paymentTerm = value.hasOwnProperty("paymentTerm")
+            //     ? value.paymentTerm
+            //     : {};
+            this.invoice.priceLevel = value.priceLevel || {}
+            const baseCurrency = value.baseCurrency || {}
+            if (baseCurrency.hasOwnProperty("code")) {
+                this.baseCurrencyCode = " " + baseCurrency.code;
+            }
+            const priceLevel = value.priceLevel || {}
+            const currency = priceLevel.currency || {}
+            const code = currency.code || ''
+            // window.console.log('priceLevel: ' + JSON.stringify(priceLevel))
+            if (code !== '') {
+                this.loadTransactionRate();
+            }
+            this.billingAddress = value.billingAddress || []
+            this.deliveryAddress = value.deliveryAddress || []
+            if (this.billingAddress.length > 0) {
+                this.invoice.billingAddress = this.billingAddress[0];
+            }
+            if (this.deliveryAddress.length > 0) {
+                this.invoice.deliveryAddress = this.deliveryAddress[0];
+            }
+            this.onInvoiceDateChanged();
+            this.loadProjectByCustomer();
+        },
+        async loadCustomerDetail(customerId) {
+            try {
+                const strFilter = '?id=' + customerId
+                customerHandler.customerDetail(strFilter).then((res) => {
+                    if (res.data.statusCode === 200) {
+                        const lines = res.data.data || []
+                        lines.forEach(item => {
+                            this.customer = {
+                                id: item.id,
+                                type: item.type || {},
+                                isDonor: item.isDonor || false,
+                                crn: item.crn || '',
+                                customerType: item.customerType || {},
+                                number: item.number || '',
+                                numberName: (item.number || '') + ' - ' + (item.name || ''),
+                                name: item.name || '',
+                                connectId: item.connectId || '',
+                                gender: item.gender || '',
+                                alternativeName: item.alternativeName || '',
+                                taxId: item.taxId || '',
+                                consumerId: item.consumerId || '',
+                                registeredDate: item.registeredDate || '',
+                                customerGroup: item.customerGroup,
+                                receivableAcc: item.receivableAcc,
+                                saleDepositAcc: item.saleDepositAcc,
+                                saleDiscountAcc: item.saleDiscountAcc,
+                                priceLevel: item.priceLevel,
+                                billPayment: item.billPayment,
+                                cashPayment: item.cashPayment || {},
+                                qrPayment: item.qrPayment || {},
+                                nature: item.nature,
+                                image: item.image || {},
+                                noteOnInvoice: item.noteOnInvoice || '',
+                                billingAddress: item.billingAddress,
+                                contactPerson: item.contactPerson,
+                                deliveryAddress: item.deliveryAddress,
+                                email: item.email,
+                                baseCurrency: item.baseCurrency,
+                                decimalFormat: item.decimalFormat
+                            };
+                        })
+                        window.console.log('this.customer', this.customer)
+                        this.onCustomerDropdownChange(this.customer)
+                    }
+                })
+            } catch (e) {
+                window.console.log('Error on customer detail', e)
+            }
+        },
+        // async onLocalFilter(filter){
+        //     try{
+        //
+        //     }catch(e){
+        //
+        //     }
+        // }
     },
     computed: {
+        initAction() {
+            if (this.$route.params.id === '' || this.$route.params.id === undefined) {
+                return 'new'
+            } else {
+                return 'edit'
+            }
+        },
+        customerName() {
+            if (this.invoice) {
+                const customer = this.invoice.customer || {}
+                const customerId = customer.id || ''
+                const connectId = customer.connectId || ''
+                const number = customer.number || ''
+                const name = customer.name || ''
+                if (customerId !== '') {
+                    return (connectId || number) + ' - ' + name
+                }
+            }
+            return "";
+        },
         disabledSLP() {
             if (this.$route.params.id) {
                 const refF = this.invoice.refFrom || []
@@ -4702,6 +4821,12 @@ export default {
         //         this.$emit('depositDeduction', value)
         //     }
         // }
+        idCheckEvent() {
+            return this.$route.query.type;
+        },
+        clearWatch() {
+            return this.$route.params.id;
+        }
     },
     watch: {
         // id() {
@@ -4712,7 +4837,16 @@ export default {
         //         this.loadViewInvoice();
         //     }
         // },
-        '$route': 'loadSaleFormContent'
+        // '$route': 'loadSaleFormContent'
+        idCheckEvent() {
+            this.loadSaleFormContent();
+            window.console.log("inv");
+        },
+        clearWatch() {
+            if (this.$route.params.id === undefined && this.$route.query.type === undefined) {
+                this.setDefaultData()
+            }
+        }
     },
     created() {
         this.loadPriceLevel();

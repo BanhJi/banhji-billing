@@ -377,6 +377,10 @@ export default {
                 abbr: this.transaction.transactionType.abbr,
                 structure: this.transaction.transactionType.structure,
                 transactionDate: this.transaction.transactionDate,
+                sequcencing: this.transaction.transactionType.sequcencing,
+                prefixSeparator: this.transaction.transactionType.prefixSeparator || '',
+                numberSeparator: this.transaction.transactionType.numberSeparator || '',
+                format: this.transaction.transactionType.format || 5,
                 type: 'Sale Lead',
             }
             billingHandler.lastNumber(data).then(response => {

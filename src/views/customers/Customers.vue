@@ -43,6 +43,7 @@
                           {{ $t("price") }}
                         </span>
                       </v-tab>
+
                       <v-tab :key="4" v-if="type != 'npo'">
                         <span>
                           {{ $t("setting") }}
@@ -394,6 +395,7 @@
                       </v-card-text>
                     </v-card>
                   </v-tab-item>
+
                   <v-tab-item v-if="type != 'npo'">
                     <v-card flat>
                       <v-card-text class="">
@@ -452,7 +454,7 @@ export default {
     //  get from share_funding folder
     FundingTab: () => import("@/views/share_funding/funding/FundingTab"),
     CustomersDonorTab: () =>
-      import("@/views/share_funding/donor/CustomersDonorTab")
+      import("@/views/share_funding/donor/CustomersDonorTab"),
   },
   data: () => ({
     // active_tab: data.customer_tab.main

@@ -112,6 +112,7 @@
     import Settings from './app_connect/Settings'
     export default {
         name: "AddProduct",
+        props: ['dataUpdate'],
         components:{
             'LoadingMe': LoadingMe,
             Type,
@@ -149,7 +150,6 @@
                 this.stepsCondition(this.steps)
             },
             nextStpes(e,type){
-                window.console.log(e)
                 if(type == 1){
                     this.typeApp = e;
                 }else if (type == 2){

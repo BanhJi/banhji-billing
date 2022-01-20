@@ -3,7 +3,7 @@
         <v-col sm="12" cols="12" class="grayBg px-6">
             <v-card color="white" class="pa-3 no_border" elevation="0">
                 <h2 class="mb-0 font_20">{{ $t("payment_option_report") }}</h2>
-                <p class="mb-0">{{ $t("payment_requests_desc") }}</p>
+                <p class="mb-0">{{ $t("payment_option_report_desc") }}</p>
                 <!-- loading -->
                 <LoadingMe :isLoading="showLoading"
                            :fullPage="false"
@@ -133,7 +133,7 @@ export default {
     data: () => ({
         startDate: new Date().toISOString().substr(0, 10),
         endDate: new Date().toISOString().substr(0, 10),
-        dateSorters: ["Today", "This Week", "This Month", "This Year"],
+        dateSorters: ['Today', 'This Week', 'This Month', 'This Year', 'Last Month' , 'Last Year'],
         mDateSorter: "Today",
         journal_entries: [],
         transactions: [],
@@ -181,7 +181,15 @@ export default {
                         new Date(today.getFullYear(), today.getMonth(), 31),
                         "yyyy-MM-dd"
                     );
-
+                 break
+                case "Last Month":
+                  this.startDate = kendo.toString(new Date(today.getFullYear(), today.getMonth(), -30), 'yyyy-MM-dd');
+                  this.endDate = kendo.toString(new Date(today.getFullYear(), today.getMonth() -1, +31), 'yyyy-MM-dd');
+        
+                  break
+                case "Last Year":
+                  this.startDate = kendo.toString(new Date(today.getFullYear(), -11, -30), 'yyyy-MM-dd');
+                  this.endDate = kendo.toString(new Date(today.getFullYear(), -1, +31), 'yyyy-MM-dd');
                     break;
                 case "This Year":
                     this.startDate = kendo.toString(

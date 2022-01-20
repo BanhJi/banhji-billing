@@ -268,7 +268,7 @@ export default {
     data: () => ({
         startDate: new Date().toISOString().substr(0, 10),
         endDate: new Date().toISOString().substr(0, 10),
-        dateSorters: ['Today', 'This Week', 'This Month', 'This Year'],
+        dateSorters: ['Today', 'This Week', 'This Month', 'This Year', 'Last Month' , 'Last Year'],
         mDateSorter: 'Today',
         showLoading: false,
         transactions: [],
@@ -384,6 +384,15 @@ export default {
                     this.startDate = kendo.toString(new Date(today.getFullYear(), 0, 1), 'yyyy-MM-dd')
                     this.endDate = kendo.toString(new Date(today.getFullYear(), 11, 31), 'yyyy-MM-dd')
 
+                 break
+                case "Last Month":
+                  this.startDate = kendo.toString(new Date(today.getFullYear(), today.getMonth(), -30), 'yyyy-MM-dd');
+                  this.endDate = kendo.toString(new Date(today.getFullYear(), today.getMonth() -1, +31), 'yyyy-MM-dd');
+        
+                  break
+                case "Last Year":
+                  this.startDate = kendo.toString(new Date(today.getFullYear(), -11, -30), 'yyyy-MM-dd');
+                  this.endDate = kendo.toString(new Date(today.getFullYear(), -1, +31), 'yyyy-MM-dd');
                     break
                 default:
                     this.startDate = ""

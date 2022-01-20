@@ -1418,11 +1418,20 @@ const routes = [{
             }
         },
         {
-            path: 'batch_invoicing',
-            name: 'Batch Invoicing',
-            component: load('bills/billInvoice'),
+            path: 'billing',
+            name: 'billing',
+            component: load('bills/Billings'),
             meta: {
                 mainMenu: 'bills',
+                title: 'Bills',
+            }
+        },
+        {
+            path: 'run_batch',
+            name: 'Run Batch',
+            component: load('bills/RunBatch'),
+            meta: {
+                mainMenu: 'Run Batch',
                 title: 'Bills',
             }
         },

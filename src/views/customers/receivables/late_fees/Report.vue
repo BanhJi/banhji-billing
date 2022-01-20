@@ -2,6 +2,8 @@
   <v-row>
     <v-col sm="12" cols="12" class="grayBg px-6">
       <v-card color="white" class="pa-3 no_border" elevation="0">
+         <h2 class="mb-0 font_20">{{ $t("late_fee_report") }}</h2>
+                <p class="mb-0">{{ $t("late_fee_report_dec") }}</p>
         <!-- loading -->
         <LoadingMe
           :isLoading="compeletLoading"

@@ -62,10 +62,11 @@
                                                         <dropdownlist
                                                             :data-items="customers"
                                                             @change="onCustomerChanged"
-                                                            :value="mCustomer"
+                                                            :value="customer"
                                                             :data-item-key="'id'"
-                                                            :text-field="'name'"
+                                                            :text-field="'numberName'"
                                                             :default-item="defaultItem"
+                                                            :loading="loading"
                                                             :filterable="true"
                                                             @filterchange="onCustomerFilterChanged">
                                                         </dropdownlist>
@@ -486,7 +487,7 @@
                                         <!--                        </v-list-item-group>-->
                                         <!--                      </v-list>-->
                                         <!--                    </v-menu>-->
-                                        <v-btn color="primary"
+                                        <v-btn v-if="!check_id_edit" color="primary"
                                                class="float-right white--text text-capitalize "
                                                @click="onSaveClose('close')">
                                             {{ $t('save_close') }}
@@ -495,6 +496,11 @@
                                                style="margin-right: 10px !important"
                                                class="white--text float-right text-capitalize"
                                                @click="onSaveClose('new')">{{ $t("save_new") }}
+                                        </v-btn>
+                                        <v-btn v-if="!check_id_edit" color="secondary"
+                                               style="margin-right: 10px !important"
+                                               class="white--text float-right text-capitalize"
+                                               @click="onSaveClose('print')">{{ $t("save_print") }}
                                         </v-btn>
                                         <v-btn v-if="check_id_edit" color="secondary"
                                                class="white--text mx-2 float-right text-capitalize"
@@ -546,7 +552,9 @@ const strFilter = '?optionType=' + OPTION_TYPE
 
 const cookieJS = require("@/cookie.js");
 const cookie = cookieJS.getCookie();
-// from
+const SECOND_DELAY = 1000;
+
+// form
 const {getFormSetting} = require("@/scripts/settingsHandler.js")
 import {print} from "@/form/Sale.js";
 
@@ -559,7 +567,8 @@ export default {
         'dropdownlist': DropDownList
     },
     data: () => ({
-        check_id_edit: false,
+        loading: false,
+        check_id_edit: true,
         PaymentOptionEditor: PaymentOptionEditor,
         showLoading: false,
         loadingAlert: false,
@@ -592,7 +601,7 @@ export default {
         search: '',
         transactionTypes: [],
         customers: [],
-        mCustomer: {},
+        customer: {},
         defaultItem: defaultItem,
         cusBaseUrl: customerHandler.search(),
         filter: '',
@@ -635,6 +644,13 @@ export default {
 
     }),
     methods: {
+        nameTemplate(dataItem) {
+            window.console.log(dataItem, ':text-field')
+            const customer = dataItem.customer || {}
+            const name = customer.name || ''
+            const number = customer.number || ''
+            return number + ' - ' + name
+        },
         _print(id) {
             let print_data = this.cashReceipt;
             print_data['baseCurrencyCode'] = this.baseCurrencyCode
@@ -775,7 +791,6 @@ export default {
         // },
         async initData() {
             if (this.$route.params.id !== undefined) {
-                this.check_id_edit = true
                 const queryString = this.$route.query
                 let type = ''
                 let option = 0
@@ -792,7 +807,6 @@ export default {
                 }
 
             } else {
-                this.check_id_edit = false
                 this.initRow()
             }
         },
@@ -844,6 +858,9 @@ export default {
                     structure: this.cashReceipt.transactionType.structure,
                     transactionDate: this.cashReceipt.transactionDate,
                     sequcencing: this.cashReceipt.transactionType.sequcencing,
+                    prefixSeparator: this.cashReceipt.transactionType.prefixSeparator || '',
+                    numberSeparator: this.cashReceipt.transactionType.numberSeparator || '',
+                    format: this.cashReceipt.transactionType.format || 5,
                     type: 'Cash Receipt',
                     entity: 1
                 }
@@ -1506,18 +1523,22 @@ export default {
             }
             return ''
         },
-        onCustomerChanged(event) {
+        async onCustomerChanged(event) {
             const value = event.value
             if (value && value[textField] === emptyItem[textField]) {
                 return;
             }
-            this.mCustomer = value
-            this.cashReceipt.customer = value
+            await this.loadCustomerDetail(value.id)
         },
         onCustomerFilterChanged(event) {
-            const filter = event.filter.value
-            this.loadData(0, filter, this.cusBaseUrl)
-            this.filter = filter
+            const filter = event.filter.value;
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                this.loadData(0, filter, this.cusBaseUrl);
+                this.filter = filter;
+                this.loading = false;
+            }, SECOND_DELAY);
+            this.loading = true;
         },
         loadData(skip, filter, baseUrl) {
             const url = baseUrl +
@@ -1733,7 +1754,7 @@ export default {
                         }
                     } else if (this.mPaymentOption === 'Customer') {
                         data = {
-                            search: this.mCustomer.id,
+                            search: this.customer.id,
                             type: 'customer',
                             transactionDate: this.cashReceipt.transactionDate,
                         }
@@ -1819,7 +1840,7 @@ export default {
                     //todo: match Cash receipt model
                     this.cashReceipt.paidOption = this.mPaymentOption
                     this.cashReceipt.transactionDateTZ = Helper.toISODate(this.cashReceipt.transactionDate)
-                    this.cashReceipt.paidOptionText = this.search ? this.search : this.mCustomer
+                    this.cashReceipt.paidOptionText = this.search ? this.search : this.customer
                     this.cashReceipt.itemLine = dataRow
                     this.cashReceipt['jRaw'] = this.jRaw
                     this.cashReceipt.loggedUser = this.loggedUser
@@ -1839,6 +1860,9 @@ export default {
                             this.$snotify.success('Successfully')
                             if (save == 'new') {
                                 this.clear()
+                            } else if (save == 'print') {
+                                this._print(4);
+                                this.clear();
                             } else {
                                 this.clear()
                                 this.close()
@@ -1883,7 +1907,7 @@ export default {
             let ds = this.$refs.cashReceiptItemLineDS.kendoWidget();
             ds.data([]);
             this.id = undefined
-            this.mCustomer = {}
+            this.customer = {}
             this.name = ''
             this.mPaymentOption = 'Invoice'
             this.cashReceipt = new CashReceiptModel()
@@ -1892,18 +1916,79 @@ export default {
         },
         close() {
             this.$router.go(-1);
-        }
+        },
+        onCustomerDropdownChange(value) {
+            this.customer = value
+            this.cashReceipt.customer = value
+        },
+        async loadCustomerDetail(customerId) {
+            try {
+                const strFilter = '?id=' + customerId
+                customerHandler.customerDetail(strFilter).then((res) => {
+                    if (res.data.statusCode === 200) {
+                        const lines = res.data.data || []
+                        lines.forEach(item => {
+                            this.customer = {
+                                id: item.id,
+                                type: item.type || {},
+                                isDonor: item.isDonor || false,
+                                crn: item.crn || '',
+                                customerType: item.customerType || {},
+                                number: item.number || '',
+                                numberName: (item.number || '') + ' - ' + (item.name || ''),
+                                name: item.name || '',
+                                connectId: item.connectId || '',
+                                gender: item.gender || '',
+                                alternativeName: item.alternativeName || '',
+                                taxId: item.taxId || '',
+                                consumerId: item.consumerId || '',
+                                registeredDate: item.registeredDate || '',
+                                customerGroup: item.customerGroup,
+                                receivableAcc: item.receivableAcc,
+                                saleDepositAcc: item.saleDepositAcc,
+                                saleDiscountAcc: item.saleDiscountAcc,
+                                priceLevel: item.priceLevel,
+                                billPayment: item.billPayment,
+                                cashPayment: item.cashPayment || {},
+                                qrPayment: item.qrPayment || {},
+                                nature: item.nature,
+                                image: item.image || {},
+                                noteOnInvoice: item.noteOnInvoice || '',
+                                billingAddress: item.billingAddress,
+                                contactPerson: item.contactPerson,
+                                deliveryAddress: item.deliveryAddress,
+                                email: item.email,
+                                baseCurrency: item.baseCurrency,
+                                decimalFormat: item.decimalFormat
+                            };
+                        })
+                        window.console.log('this.customer', this.customer)
+                        this.onCustomerDropdownChange(this.customer)
+                    }
+                })
+            } catch (e) {
+                window.console.log('Error on customer detail', e)
+            }
+        },
     },
     watch: {
-        id() {
+        // id() {
+        //     if (this.$route.params.id === undefined) {
+        //         this.clear()
+        //     } else {
+        //         this.showLoading = true
+        //         this.loadOtherAccount()
+        //         this.initData()
+        //     }
+        // },
+        checkId() {
             if (this.$route.params.id === undefined) {
                 this.clear()
                 this.check_id_edit = false
-
             } else {
                 this.showLoading = true
-                this.loadOtherAccount()
-                this.initData()
+                this.check_id_edit = true
+                this.loadCashReceiptView()
             }
         }
     },
@@ -1920,6 +2005,11 @@ export default {
         this.loadData(0, this.filter, this.cusBaseUrl)
         await this.initGrid(this)
         await this.initData()
+        if (this.$route.params.id === undefined) {
+            this.check_id_edit = false
+        } else {
+            this.check_id_edit = true
+        }
 
     },
     computed: {
@@ -1928,6 +2018,9 @@ export default {
         },
         showMe() {
             return this.mPaymentOption === 'Customer' // or some other more complicated logic
+        },
+        checkId() {
+            return this.$route.params.id;
         }
     }
 };

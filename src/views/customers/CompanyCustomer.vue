@@ -303,7 +303,7 @@
                                                                 :title="$t('action')"
                                                                 :width="70"
                                                                 :command="[{
-                                                                    iconClass: 'k-icon k-i-edit', 
+                                                                    iconClass: 'k-icon k-i-edit',
                                                                     text: 'Edit',
                                                                     click: goEditAddress
                                                                 }]"
@@ -1241,7 +1241,7 @@ export default {
                         status: this.customer.status,
                         deleted: this.customer.deleted,
                         number: this.customer.number,
-                        instituteId: this.customer.fromInstituteId,
+                        instituteId: this.customer.fromInstitute,
                         subOfCustomer: this.customer.subOfCustomer,
                         registeredDate: this.customer.registeredDate,
                         billingType: this.customer.billingType,

@@ -75,6 +75,7 @@
                                                         :text-field="textField"
                                                         :default-item="defaultItem"
                                                         :required="true"
+                                                        :loading="loading"
                                                         :valid="validCustomer"
                                                         :filterable="true"
                                                         :disabled="isEdit"
@@ -1011,6 +1012,7 @@ const cookieJS = require("@/cookie.js");
 const cookie = cookieJS.getCookie();
 const {dataStore} = require("@/observable/store");
 
+const SECOND_DELAY = 1000;
 export default {
     name: "SaleQuote",
     props: {
@@ -1029,6 +1031,7 @@ export default {
             import("@/components/kendo_templates/MonthOfPicker"),
     },
     data: () => ({
+        loading: false,
         transaction: new TransactionModel(),
         isEdit: false,
         numSelect: [1],
@@ -1324,6 +1327,10 @@ export default {
             let data = {
                 abbr: this.transaction.transactionType.abbr,
                 structure: this.transaction.transactionType.structure,
+                prefixSeparator: this.transaction.transactionType.prefixSeparator || '',
+                numberSeparator: this.transaction.transactionType.numberSeparator || '',
+                format: this.transaction.transactionType.format || 5,
+                sequcencing: this.transaction.transactionType.sequcencing,
                 transactionDate: d,
                 type: "Sale Quote",
             };
@@ -1353,58 +1360,25 @@ export default {
         zeroPad(num, places) {
             return String(num).padStart(places, "0");
         },
-        //customer
-        onChange(event) {
+        //customer¬
+        async onChange(event) {
             window.console.log(event, 'customer');
             const value = event.value;
             if (value && value[textField] === emptyItem[textField]) {
                 return;
             }
-            this.customer = value;
-            this.transaction.customer = value;
-            // this.invoice = value
-            window.console.log(value, 'customer')
-            this.transaction.priceLevel = value.priceLevel ? value.priceLevel : {}
-            this.billingAddress = value.hasOwnProperty("billingAddress")
-                ? value.billingAddress
-                : [];
-            this.deliveryAddress = value.hasOwnProperty("deliveryAddress")
-                ? value.deliveryAddress
-                : [];
-            if (this.billingAddress.length > 0) {
-                this.transaction.billingAddress = this.billingAddress[0];
-            }
-            if (this.deliveryAddress.length > 0) {
-                this.transaction.deliveryAddress = this.deliveryAddress[0];
-            }
-            this.onQuoteDateChanged();
-            this.loadProjectByCustomer();
-            const priceLevel = value.hasOwnProperty("priceLevel")
-                ? value.priceLevel
-                : {};
-            const baseCurrency = value.hasOwnProperty("baseCurrency")
-                ? value.baseCurrency
-                : {};
-            if (baseCurrency.hasOwnProperty("code")) {
-                this.baseCurrencyCode = baseCurrency.code;
-            }
-            if (priceLevel.hasOwnProperty("currency")) {
-                if (priceLevel.currency.hasOwnProperty("id")) {
-                    this.loadTransactionRate();
-                }
-            }
-            // const creditLimit = value.hasOwnProperty("creditLimit")
-            //     ? value.creditLimit
-            //     : 0;
-            // this.transaction.creditLimit = kendo.parseFloat(creditLimit);
-            // this.loadCustomerBalance(this.customer.id);
-            // this.loadPaymentTermList();
-            // this.loadCreditLimit();
+            await this.loadCustomerDetail(value.id)
         },
         onFilterChange(event) {
             const filter = event.filter.value;
-            this.requestData(0, filter, this.cusBaseUrl);
-            this.filter = filter;
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                this.requestData(0, filter, this.cusBaseUrl);
+                this.filter = filter;
+                this.loading = false;
+            }, SECOND_DELAY);
+            this.loading = true;
+
         },
         requestData(skip, filter, baseUrl) {
             const url = baseUrl + `?filter=${filter}`;
@@ -1474,8 +1448,13 @@ export default {
         },
         onEmployeeFilterChanged(event) {
             const filter = event.filter.value;
-            this.requestData_(0, filter, this.empBaseUrl);
-            this.filter_ = filter;
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                this.requestData_(0, filter, this.empBaseUrl);
+                this.filter_ = filter;
+                this.loading = false;
+            }, SECOND_DELAY);
+            this.loading = true;
         },
         onPaymentTermChanged() {
             if (this.customer) {
@@ -2084,6 +2063,7 @@ export default {
                     autoBind: true,
                     autoWidth: true,
                     height: 400,
+                    delay: SECOND_DELAY,
                     filter: "contains",
                     dataTextField: "name",
                     dataValueField: "id",
@@ -2415,6 +2395,7 @@ export default {
                     autoWidth: true,
                     height: 400,
                     suggest: true,
+                    delay: SECOND_DELAY,
                     filter: "contains",
                     dataTextField: "name",
                     dataValueField: "id",
@@ -2586,7 +2567,7 @@ export default {
                                 if (res.data.statusCode === 200) {
                                     this.showLoading = false;
                                     this.locations = res.data.data;
-                                    if ( this.locations.length > 0) {
+                                    if (this.locations.length > 0) {
                                         this.transaction.location = this.locations[0];
                                     }
                                 }
@@ -3238,6 +3219,96 @@ export default {
                 this.loadLocation();
                 this.loadEmployeeCenter();
             }
+        },
+        async loadCustomerDetail(customerId) {
+            try {
+                const strFilter = '?id=' + customerId
+                customerHandler.customerDetail(strFilter).then((res) => {
+                    if (res.data.statusCode === 200) {
+                        const lines = res.data.data || []
+                        lines.forEach(item => {
+                            this.customer = {
+                                id: item.id,
+                                type: item.type || {},
+                                isDonor: item.isDonor || false,
+                                crn: item.crn || '',
+                                customerType: item.customerType || {},
+                                number: item.number || '',
+                                numberName: (item.number || '') + ' - ' + (item.name || ''),
+                                name: item.name || '',
+                                connectId: item.connectId || '',
+                                gender: item.gender || '',
+                                alternativeName: item.alternativeName || '',
+                                taxId: item.taxId || '',
+                                consumerId: item.consumerId || '',
+                                registeredDate: item.registeredDate || '',
+                                customerGroup: item.customerGroup,
+                                receivableAcc: item.receivableAcc,
+                                saleDepositAcc: item.saleDepositAcc,
+                                saleDiscountAcc: item.saleDiscountAcc,
+                                priceLevel: item.priceLevel,
+                                billPayment: item.billPayment,
+                                cashPayment: item.cashPayment || {},
+                                qrPayment: item.qrPayment || {},
+                                nature: item.nature,
+                                image: item.image || {},
+                                noteOnInvoice: item.noteOnInvoice || '',
+                                billingAddress: item.billingAddress,
+                                contactPerson: item.contactPerson,
+                                deliveryAddress: item.deliveryAddress,
+                                email: item.email,
+                                baseCurrency: item.baseCurrency,
+                                decimalFormat: item.decimalFormat
+                            };
+                        })
+                        this.onCustomerDropdownChange(this.customer)
+                    }
+                })
+            } catch (e) {
+                window.console.log('Error on customer detail', e)
+            }
+        },
+        onCustomerDropdownChange(value) {
+            this.customer = value;
+            this.transaction.customer = value;
+            // this.invoice = value
+            window.console.log(value, 'customer')
+            this.transaction.priceLevel = value.priceLevel ? value.priceLevel : {}
+            this.billingAddress = value.hasOwnProperty("billingAddress")
+                ? value.billingAddress
+                : [];
+            this.deliveryAddress = value.hasOwnProperty("deliveryAddress")
+                ? value.deliveryAddress
+                : [];
+            if (this.billingAddress.length > 0) {
+                this.transaction.billingAddress = this.billingAddress[0];
+            }
+            if (this.deliveryAddress.length > 0) {
+                this.transaction.deliveryAddress = this.deliveryAddress[0];
+            }
+            this.onQuoteDateChanged();
+            this.loadProjectByCustomer();
+            const priceLevel = value.hasOwnProperty("priceLevel")
+                ? value.priceLevel
+                : {};
+            const baseCurrency = value.hasOwnProperty("baseCurrency")
+                ? value.baseCurrency
+                : {};
+            if (baseCurrency.hasOwnProperty("code")) {
+                this.baseCurrencyCode = baseCurrency.code;
+            }
+            if (priceLevel.hasOwnProperty("currency")) {
+                if (priceLevel.currency.hasOwnProperty("id")) {
+                    this.loadTransactionRate();
+                }
+            }
+            // const creditLimit = value.hasOwnProperty("creditLimit")
+            //     ? value.creditLimit
+            //     : 0;
+            // this.transaction.creditLimit = kendo.parseFloat(creditLimit);
+            // this.loadCustomerBalance(this.customer.id);
+            // this.loadPaymentTermList();
+            // this.loadCreditLimit();
         },
     },
     computed: {

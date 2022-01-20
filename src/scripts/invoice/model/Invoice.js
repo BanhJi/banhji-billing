@@ -113,8 +113,11 @@ export default class Invoice {
             this.saleTaxDetail                  = data.saleTaxDetail || []
             this.cashBasicIncomeAcc             = data.cashBasicIncomeAcc || []
             this.OtherChargeAmount              = data.OtherChargeAmount || 0
-}
-
+            this.isJournal                      = data.isJournal || 0
+            this.isJournal                      = data.isJournal || 0
+            this.journalStatus                  = data.journalStatus  || 0 
+            this.application                    = data.application || {}
+    }
     constuct(data) {
         this.constructor(data);
     }

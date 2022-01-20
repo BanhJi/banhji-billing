@@ -345,30 +345,19 @@ export default {
             var sheet = e.workbook.sheets[0];
             sheet.frozenRows = 2;
             const charName = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
-            sheet.mergedCells = ["A1:"+charName[(gridRef.length-gridRefHeadNone.length)-2]+1];
+            sheet.mergedCells = ["A1:"+charName[(gridRef.length-gridRefHeadNone.length)]+1];
             sheet.name = "Orders";
 
             var myHeaders = [
+      
                 {
-                    value:"Shipping Information",
+                    value:"Customer Header",
                     fontSize: 20,
                     textAlign: "center",
-                    background:"#60b5ff",
-                    color:"#ffffff"
-                },
-                {
-                    value:"Shipping Information",
-                    fontSize: 20,
-                    textAlign: "center",
-                    background:"#60b5ff",
-                    color:"#ffffff"
-                },
-                {
-                    value:"Shipping Information",
-                    fontSize: 20,
-                    textAlign: "center",
-                    background:"#60b5ff",
-                    color:"#ffffff"
+                    background:"#808080",
+                    color:"#0000",
+                    headerTemplate: "Units In Stock <br> (Excludes foreign)"  ,
+                    wrap: true 
                 }];
             const footerRow = {
                 height: 70,

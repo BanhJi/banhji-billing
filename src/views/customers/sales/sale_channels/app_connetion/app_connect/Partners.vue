@@ -27,22 +27,7 @@
                     id: 1,
                     image: 'https://s3-ap-southeast-1.amazonaws.com/images.banhji/bank/camIS.png'
                 },
-                {
-                    id: 2,
-                    image: 'https://s3-ap-southeast-1.amazonaws.com/images.banhji/bank/ppcbank.png'
-                },
-                     {
-                    id: 3,
-                    image: 'https://s3-ap-southeast-1.amazonaws.com/images.banhji/bank/sathapana.jpg'
-                },
-              {
-                    id: 4,
-                    image: 'https://s3-ap-southeast-1.amazonaws.com/images.banhji/bank/amk.png'
-                },
-                {
-                    id: 5,
-                    image: 'https://s3-ap-southeast-1.amazonaws.com/images.banhji/bank/amk.png'
-                }
+          
 
             ]
 

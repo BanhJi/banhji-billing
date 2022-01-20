@@ -58,8 +58,7 @@
                                                 <v-col
                                                     sm="12"
                                                     cols="12"
-                                                    class="kendo_dropdown_custom pa-0 mt-1 pb-4"
-                                                >
+                                                    class="kendo_dropdown_custom pa-0 mt-1 pb-4">
                                                     <dropdownlist
                                                         :data-items="customerList"
                                                         @change="onChange"
@@ -67,9 +66,9 @@
                                                         :data-item-key="dataItemKey"
                                                         :text-field="textField"
                                                         :default-item="defaultItem"
+                                                        :loading="loading"
                                                         :filterable="true"
-                                                        @filterchange="onFilterChange"
-                                                    >
+                                                        @filterchange="onFilterChange">
                                                     </dropdownlist>
                                                 </v-col>
                                                 <label class="label mb-0">{{
@@ -1422,6 +1421,7 @@ const paymentOptionHandler = require("@/scripts/paymentOptionHandler");
 import SaleDepositItemLineModel from "@/scripts/sale_deposit/model/ItemLine";
 import otherChargeHandler from "@/scripts/otherChargeHandler";
 import OtherChargeModel from "@/scripts/model/OtherCharge";
+import Helper from "@/helper";
 
 const saleFormContentModel = new SaleFormContentModel({});
 const itemLineModel = new ItemLineModel({});
@@ -1439,6 +1439,8 @@ const strOptionFilter = "?optionType=" + OPTION_TYPE;
 const DISCOUNT_TYPE = "?type=Sale";
 const cookieJS = require("@/cookie.js");
 const cookie = cookieJS.getCookie();
+const SECOND_DELAY = 1000;
+
 export default {
     name: "CreditMemo",
     props: ["id"],
@@ -1448,6 +1450,7 @@ export default {
         dropdownlist: DropDownList,
     },
     data: () => ({
+        loading: false,
         isLoading: 0,
         PaymentOptionEditor: PaymentOptionEditor,
         creditMemo: creditMemoModel,
@@ -1765,7 +1768,7 @@ export default {
         priceTemplate(dataItem) {
             if (dataItem) {
                 if (dataItem.hasOwnProperty("price")) {
-                    return kendo.toString(dataItem.price || 0, dataItem.decimalFormat);
+                    return kendo.toString(dataItem.price || 0, dataItem.decimalFormat || 'n2');
                 }
             }
             return 0;
@@ -1773,7 +1776,7 @@ export default {
         amtTemplate(dataItem) {
             if (dataItem) {
                 if (dataItem.hasOwnProperty("amount")) {
-                    return kendo.toString(dataItem.amount || 0, dataItem.decimalFormat);
+                    return kendo.toString(dataItem.amount || 0, dataItem.decimalFormat || 'n2');
                 }
             }
             return 0;
@@ -1906,10 +1909,24 @@ export default {
         afterFetch_(json) {
             this.employees = json.data;
         },
+        requestData_(skip, filter, baseUrl) {
+            const url = baseUrl + `/${filter}`;
+            this.requestStarted = true;
+            fetch(url)
+                .then((response) => {
+                    return response.json();
+                })
+                .then(this.afterFetch_);
+        },
         onEmployeeFilterChanged(event) {
             const filter = event.filter.value;
-            this.requestData_(0, filter, this.empBaseUrl);
-            this.filter_ = filter;
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                this.requestData_(0, filter, this.empBaseUrl);
+                this.filter_ = filter;
+                this.loading = false;
+            }, SECOND_DELAY);
+            this.loading = true;
         },
         autoCalculateDiscount(discountItem, subTotal) {
             if (discountItem) {
@@ -3393,8 +3410,13 @@ export default {
         },
         onFilterChange(event) {
             const filter = event.filter.value;
-            this.requestData(0, filter, this.cusBaseUrl);
-            this.filter = filter;
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                this.requestData(0, filter, this.cusBaseUrl);
+                this.filter = filter;
+                this.loading = false;
+            }, SECOND_DELAY);
+            this.loading = true;
         },
         requestData(skip, filter, baseUrl) {
             const url = baseUrl + `?filter=${filter}`;
@@ -3407,35 +3429,12 @@ export default {
         afterFetch(json) {
             this.customerList = json.data;
         },
-        onChange(event) {
+        async onChange(event) {
             const value = event.value;
             if (value && value["numberName"] === emptyItem["numberName"]) {
                 return;
             }
-            this.isLoading = 0
-            if (value) {
-                this.customer = value;
-                const saleDepositAcc = value.hasOwnProperty("saleDepositAcc")
-                    ? value.saleDepositAcc
-                    : {};
-                this.creditMemo.customer = value;
-                this.creditMemo.priceLevel = value.hasOwnProperty("priceLevel")
-                    ? value.priceLevel
-                    : {};
-                this.decimalFormat = value.decimalFormat;
-                if (value.baseCurrency) {
-                    this.baseCurrencyCode = value.baseCurrency.hasOwnProperty("code")
-                        ? value.baseCurrency.code
-                        : "";
-                    this.accDeposit = this.accDeposits.filter(
-                        (o) => o.id === saleDepositAcc.id
-                    );
-                }
-
-                this.loadTransactionRate();
-                this.loadProjectByCustomer();
-                // this.searchInvoice();
-            }
+            await this.loadCustomerDetail(value.id)
         },
         hideSmallSidebar() {
             this.isHideBar = !this.isHideBar;
@@ -3458,6 +3457,9 @@ export default {
                     abbr: this.creditMemo.transactionType.abbr,
                     structure: this.creditMemo.transactionType.structure,
                     transactionDate: this.transactionDate,
+                    prefixSeparator: this.creditMemo.transactionType.prefixSeparator || '',
+                    numberSeparator: this.creditMemo.transactionType.numberSeparator || '',
+                    format: this.creditMemo.transactionType.format || 5,
                     sequcencing: this.creditMemo.transactionType.sequcencing,
                     type: "Credit Memo",
                     entity: 1,
@@ -3594,6 +3596,7 @@ export default {
                     autoBind: true,
                     autoWidth: true,
                     height: 400,
+                    delay: SECOND_DELAY,
                     filter: "contains",
                     dataTextField: "name",
                     dataValueField: "id",
@@ -4306,6 +4309,7 @@ export default {
                                             number: this.creditMemo.number,
                                             abbr: this.creditMemo.transactionType.abbr,
                                             transactionDate: this.transactionDate,
+                                            transactionDateTZ: Helper.toISODate(this.transactionDate),
                                             customer: this.customer,
                                             transactionType: this.creditMemo.transactionType,
                                             currency: this.creditMemo.currency,
@@ -4636,6 +4640,81 @@ export default {
                 });
             });
             this.customerOtherChargeItem = items;
+        },
+        onCustomerDropdownChange(value) {
+            this.isLoading = 0
+            if (value) {
+                this.customer = value;
+                const saleDepositAcc = value.hasOwnProperty("saleDepositAcc")
+                    ? value.saleDepositAcc
+                    : {};
+                this.creditMemo.customer = value;
+                this.creditMemo.priceLevel = value.hasOwnProperty("priceLevel")
+                    ? value.priceLevel
+                    : {};
+                this.decimalFormat = value.decimalFormat;
+                if (value.baseCurrency) {
+                    this.baseCurrencyCode = value.baseCurrency.hasOwnProperty("code")
+                        ? value.baseCurrency.code
+                        : "";
+                    this.accDeposit = this.accDeposits.filter(
+                        (o) => o.id === saleDepositAcc.id
+                    );
+                }
+
+                this.loadTransactionRate();
+                this.loadProjectByCustomer();
+                // this.searchInvoice();
+            }
+        },
+        async loadCustomerDetail(customerId) {
+            try {
+                const strFilter = '?id=' + customerId
+                customerHandler.customerDetail(strFilter).then((res) => {
+                    if (res.data.statusCode === 200) {
+                        const lines = res.data.data || []
+                        lines.forEach(item => {
+                            this.customer = {
+                                id: item.id,
+                                type: item.type || {},
+                                isDonor: item.isDonor || false,
+                                crn: item.crn || '',
+                                customerType: item.customerType || {},
+                                number: item.number || '',
+                                numberName: (item.number || '') + ' - ' + (item.name || ''),
+                                name: item.name || '',
+                                connectId: item.connectId || '',
+                                gender: item.gender || '',
+                                alternativeName: item.alternativeName || '',
+                                taxId: item.taxId || '',
+                                consumerId: item.consumerId || '',
+                                registeredDate: item.registeredDate || '',
+                                customerGroup: item.customerGroup,
+                                receivableAcc: item.receivableAcc,
+                                saleDepositAcc: item.saleDepositAcc,
+                                saleDiscountAcc: item.saleDiscountAcc,
+                                priceLevel: item.priceLevel,
+                                billPayment: item.billPayment,
+                                cashPayment: item.cashPayment || {},
+                                qrPayment: item.qrPayment || {},
+                                nature: item.nature,
+                                image: item.image || {},
+                                noteOnInvoice: item.noteOnInvoice || '',
+                                billingAddress: item.billingAddress,
+                                contactPerson: item.contactPerson,
+                                deliveryAddress: item.deliveryAddress,
+                                email: item.email,
+                                baseCurrency: item.baseCurrency,
+                                decimalFormat: item.decimalFormat
+                            };
+                        })
+                        window.console.log('this.customer', this.customer)
+                        this.onCustomerDropdownChange(this.customer)
+                    }
+                })
+            } catch (e) {
+                window.console.log('Error on customer detail', e)
+            }
         },
     },
     watch: {

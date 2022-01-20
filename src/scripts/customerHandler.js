@@ -53,6 +53,13 @@ module.exports.centerv1 = async function (strFilter = '') {
         window.console.error(error)
     }
 }
+module.exports.centerURLV1 = function () {
+    try {
+        return apiUrl.customer.customer_centerv1
+    } catch (error) {
+        window.console.error(error)
+    }
+}
 // List
 module.exports.list = async function () {
     try {
@@ -228,6 +235,14 @@ module.exports.fundingGet = async function () {
     try {
         const response = await axios.get(apiUrl.customer.funding_get)
         return response.data
+    } catch (error) {
+        window.console.error(error)
+    }
+}
+
+module.exports.customerDetail = async function (strFilter = '') {
+    try {
+        return await axios.get(apiUrl.customer.customer_linev1 + strFilter)
     } catch (error) {
         window.console.error(error)
     }

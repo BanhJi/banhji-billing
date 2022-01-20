@@ -60,6 +60,7 @@
                                                         :text-field="textField"
                                                         :default-item="defaultItem"
                                                         :filterable="true"
+                                                        :loading="loading"
                                                         @filterchange="onFilterChange"
                                                         :required="true">
                                                     </dropdownlist>
@@ -535,6 +536,7 @@ import ItemLineModel from "@/scripts/sale_deposit/model/ItemLine";
 import {dataStore, ShowResource} from "@/observable/store";
 import SaleFormContentModel from "@/scripts/model/SaleFormContent";
 import PaymentOptionEditor from "@/scripts/kendo_editor/PaymentOptionEditor";
+import Helper from "@/helper";
 
 const saleOrderHandler = require("@/scripts/transactionHandler");
 const customerHandler = require("@/scripts/customerHandler");
@@ -559,6 +561,8 @@ const OPTION_TYPE = "Customer";
 const strFilter = "?optionType=" + OPTION_TYPE;
 const cookieJS = require("@/cookie.js");
 const cookie = cookieJS.getCookie();
+
+const SECOND_DELAY = 1000;
 export default {
     name: "SaleDeposit",
     props: ["id"],
@@ -568,6 +572,7 @@ export default {
         dropdownlist: DropDownList,
     },
     data: () => ({
+        loading: false,
         isEdit: false,
         showLoading: false,
         alert: false,
@@ -689,6 +694,9 @@ export default {
                     abbr: this.saleDeposit.transactionType.abbr,
                     structure: this.saleDeposit.transactionType.structure,
                     transactionDate: this.transactionDate,
+                    prefixSeparator: this.saleDeposit.transactionType.prefixSeparator || '',
+                    numberSeparator: this.saleDeposit.transactionType.numberSeparator || '',
+                    format: this.saleDeposit.transactionType.format || 5,
                     sequcencing: this.saleDeposit.transactionType.sequcencing,
                     type: "Sale Deposit",
                     entity: 1,
@@ -841,8 +849,13 @@ export default {
         },
         onFilterChange(event) {
             const filter = event.filter.value;
-            this.requestData(0, filter, this.cusBaseUrl);
-            this.filter = filter;
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                this.requestData(0, filter, this.cusBaseUrl);
+                this.filter = filter;
+                this.loading = false;
+            }, SECOND_DELAY);
+            this.loading = true;
         },
         requestData(skip, filter, baseUrl) {
             const url = baseUrl + `?filter=${filter}`;
@@ -855,16 +868,13 @@ export default {
         afterFetch(json) {
             this.customerList = json.data;
         },
-        onChange(event) {
+        async onChange(event) {
             const value = event.value;
             if (value && value["numberName"] === emptyItem["numberName"]) {
                 return;
             }
-            this.customer = value;
-            this.saleDeposit.saleDepositAcc = value.saleDepositAcc;
-            this.decimalFormat = this.customer.decimalFormat;
-            this.loadSaleOrders();
-            this.loadCustomerBalance(value.id);
+            await this.loadCustomerDetail(value.id)
+
         },
         async loadSaleFormContent() {
             new Promise((resolve) => {
@@ -1238,6 +1248,7 @@ export default {
                             number: this.saleDeposit.number,
                             uuid: this.saleDeposit.uuid,
                             transactionDate: this.transactionDate,
+                            transactionDateTZ: Helper.toISODate(this.transactionDate),
                             journal_uuid: this.saleDeposit.journal_uuid,
                             abbr: this.saleDeposit.transactionType.abbr,
                             customer: this.customer,
@@ -1359,6 +1370,62 @@ export default {
                 await this.loadViewDeposit();
             } else {
                 this.addRow();
+            }
+        },
+        onCustomerDropdownChange(value) {
+            this.customer = value;
+            this.saleDeposit.saleDepositAcc = value.saleDepositAcc;
+            this.decimalFormat = this.customer.decimalFormat;
+            this.loadSaleOrders();
+            this.loadCustomerBalance(value.id);
+        },
+        async loadCustomerDetail(customerId) {
+            try {
+                const strFilter = '?id=' + customerId
+                customerHandler.customerDetail(strFilter).then((res) => {
+                    if (res.data.statusCode === 200) {
+                        const lines = res.data.data || []
+                        lines.forEach(item => {
+                            this.customer = {
+                                id: item.id,
+                                type: item.type || {},
+                                isDonor: item.isDonor || false,
+                                crn: item.crn || '',
+                                customerType: item.customerType || {},
+                                number: item.number || '',
+                                numberName: (item.number || '') + ' - ' + (item.name || ''),
+                                name: item.name || '',
+                                connectId: item.connectId || '',
+                                gender: item.gender || '',
+                                alternativeName: item.alternativeName || '',
+                                taxId: item.taxId || '',
+                                consumerId: item.consumerId || '',
+                                registeredDate: item.registeredDate || '',
+                                customerGroup: item.customerGroup,
+                                receivableAcc: item.receivableAcc,
+                                saleDepositAcc: item.saleDepositAcc,
+                                saleDiscountAcc: item.saleDiscountAcc,
+                                priceLevel: item.priceLevel,
+                                billPayment: item.billPayment,
+                                cashPayment: item.cashPayment || {},
+                                qrPayment: item.qrPayment || {},
+                                nature: item.nature,
+                                image: item.image || {},
+                                noteOnInvoice: item.noteOnInvoice || '',
+                                billingAddress: item.billingAddress,
+                                contactPerson: item.contactPerson,
+                                deliveryAddress: item.deliveryAddress,
+                                email: item.email,
+                                baseCurrency: item.baseCurrency,
+                                decimalFormat: item.decimalFormat
+                            };
+                        })
+                        window.console.log('this.customer', this.customer)
+                        this.onCustomerDropdownChange(this.customer)
+                    }
+                })
+            } catch (e) {
+                window.console.log('Error on customer detail', e)
             }
         },
     },

@@ -755,6 +755,9 @@ export default {
                 url = `production_order_view/${data.txnId}`;
             } else if (data.type === "Production") {
                 url = `production/${data.txnId}`;
+            } 
+            else if (data.type === "Cash Receipt") {
+                url = `cash_receipt/${data.txnId}`;
             }
             let args = {
                 text: data.referenceNo,

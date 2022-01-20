@@ -55,6 +55,7 @@
                                                         :text-field="textField"
                                                         :default-item="defaultItem"
                                                         :filterable="true"
+                                                        :loading="loading"
                                                         @filterchange="onFilterChange"
                                                         :required="true"
                                                         :valid="validCustomer"
@@ -874,6 +875,8 @@ const invoicePrefix = "lin-";
 const DISCOUNT_TYPE = "?type=Sale";
 const cookieJS = require("@/cookie.js");
 const cookie = cookieJS.getCookie();
+const SECOND_DELAY = 1000;
+
 export default {
     name: "SaleOrder",
     props: {
@@ -891,6 +894,7 @@ export default {
         "app-monthof-picker": () => import("@/components/kendo_templates/MonthOfPicker"),
     },
     data: () => ({
+        loading: false,
         saleOrder: new SaleOrderModel(),
         isEdit: false,
         numSelect: [1],
@@ -1141,6 +1145,10 @@ export default {
                     abbr: this.saleOrder.transactionType.abbr,
                     structure: this.saleOrder.transactionType.structure,
                     transactionDate: d,
+                    prefixSeparator: this.saleOrder.transactionType.prefixSeparator || '',
+                    numberSeparator: this.saleOrder.transactionType.numberSeparator || '',
+                    format: this.saleOrder.transactionType.format || 5,
+                    sequcencing: this.saleOrder.transactionType.sequcencing,
                     type: "Sale Order",
                 };
                 billingHandler
@@ -1168,63 +1176,23 @@ export default {
             return String(num).padStart(places, "0");
         },
         //customer
-        onChange(event) {
+        async onChange(event) {
             window.console.log(event);
             const value = event.value;
             if (value && value[textField] === emptyItem[textField]) {
                 return;
             }
-            this.customer = value;
-            this.saleOrder.customer = value;
-            // this.invoice = value
-            // this.saleOrder.paymentTerm = value.hasOwnProperty("paymentTerm")
-            //   ? value.paymentTerm
-            //   : {};
-            this.saleOrder.priceLevel = value.hasOwnProperty("priceLevel")
-                ? value.priceLevel
-                : {};
-            const baseCurrency = value.hasOwnProperty("baseCurrency")
-                ? value.baseCurrency
-                : {};
-            if (baseCurrency.hasOwnProperty("code")) {
-                this.baseCurrencyCode = baseCurrency.code;
-            }
-            const priceLevel = value.hasOwnProperty("priceLevel")
-                ? value.priceLevel
-                : {};
-            if (priceLevel.hasOwnProperty("currency")) {
-                if (priceLevel.currency.hasOwnProperty("id")) {
-                    this.loadTransactionRate();
-                }
-            }
-            this.billingAddress = value.hasOwnProperty("billingAddress")
-                ? value.billingAddress
-                : [];
-            this.deliveryAddress = value.hasOwnProperty("deliveryAddress")
-                ? value.deliveryAddress
-                : [];
-            if (this.billingAddress.length > 0) {
-                this.saleOrder.billingAddress = this.billingAddress[0];
-            }
-            if (this.deliveryAddress.length > 0) {
-                this.saleOrder.deliveryAddress = this.deliveryAddress[0];
-            }
-            this.onSaleOrderDateChanged();
-            this.loadProjectByCustomer();
-            // const creditLimit = value.hasOwnProperty("creditLimit")
-            //   ? value.creditLimit
-            //   : 0;
-            // this.saleOrder.creditLimit = kendo.parseFloat(creditLimit);
-            this.loadCreditLimit();
-            this.loadCustomerBalance(this.customer.id);
-            // load quote
-            this.loadQuote();
-            this.loadPaymentTermList();
+            await this.loadCustomerDetail(value.id)
         },
         onFilterChange(event) {
             const filter = event.filter.value;
-            this.requestData(0, filter, this.cusBaseUrl);
-            this.filter = filter;
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                this.requestData(0, filter, this.cusBaseUrl);
+                this.filter = filter;
+                this.loading = false;
+            }, SECOND_DELAY);
+            this.loading = true;
         },
         async requestData(skip, filter, baseUrl) {
             let url = baseUrl + `?filter=${filter}`;
@@ -1277,8 +1245,14 @@ export default {
             this.saleOrder.employee = value;
         },
         onEmployeeFilterChanged(event) {
-            const empfilter = event.filter.value;
-            this.employeeRequestData(0, empfilter, this.empBaseUrl);
+            const filter = event.filter.value;
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                this.employeeRequestData(0, filter, this.empBaseUrl);
+                this.filter_ = filter;
+                this.loading = false;
+            }, SECOND_DELAY);
+            this.loading = true;
         },
         employeeRequestData(skip, filter, baseUrl) {
             const url = baseUrl + `?filter=${filter}`;
@@ -1902,6 +1876,7 @@ export default {
                     autoBind: true,
                     autoWidth: true,
                     height: 400,
+                    delay: SECOND_DELAY,
                     filter: "contains",
                     dataTextField: "name",
                     dataValueField: "id",
@@ -2261,6 +2236,7 @@ export default {
                     autoWidth: true,
                     height: 400,
                     suggest: true,
+                    delay: SECOND_DELAY,
                     filter: "contains",
                     dataTextField: "name",
                     dataValueField: "id",
@@ -2433,8 +2409,8 @@ export default {
                                 if (res.data.statusCode === 200) {
                                     this.showLoading = false;
                                     this.locations = res.data.data;
-                                    if ( this.locations.length > 0) {
-                                        this.saleOrder.location =this.locations[0];
+                                    if (this.locations.length > 0) {
+                                        this.saleOrder.location = this.locations[0];
                                     }
                                 } else {
                                     this.showLoading = false;
@@ -3104,7 +3080,7 @@ export default {
                 this.itemLines = []
                 this.saleOrder = res.data.data[0]
                 this.bindData();
-            })
+            });
         },
         async loadEmployeeCenter() {
             new Promise((resolve) => {
@@ -3181,6 +3157,103 @@ export default {
                 this.loadEmployeeCenter();
             }
         },
+        onCustomerDropdownChange(value) {
+            this.customer = value;
+            this.saleOrder.customer = value;
+            // this.invoice = value
+            // this.saleOrder.paymentTerm = value.hasOwnProperty("paymentTerm")
+            //   ? value.paymentTerm
+            //   : {};
+            this.saleOrder.priceLevel = value.hasOwnProperty("priceLevel")
+                ? value.priceLevel
+                : {};
+            const baseCurrency = value.hasOwnProperty("baseCurrency")
+                ? value.baseCurrency
+                : {};
+            if (baseCurrency.hasOwnProperty("code")) {
+                this.baseCurrencyCode = baseCurrency.code;
+            }
+            const priceLevel = value.hasOwnProperty("priceLevel")
+                ? value.priceLevel
+                : {};
+            if (priceLevel.hasOwnProperty("currency")) {
+                if (priceLevel.currency.hasOwnProperty("id")) {
+                    this.loadTransactionRate();
+                }
+            }
+            this.billingAddress = value.hasOwnProperty("billingAddress")
+                ? value.billingAddress
+                : [];
+            this.deliveryAddress = value.hasOwnProperty("deliveryAddress")
+                ? value.deliveryAddress
+                : [];
+            if (this.billingAddress.length > 0) {
+                this.saleOrder.billingAddress = this.billingAddress[0];
+            }
+            if (this.deliveryAddress.length > 0) {
+                this.saleOrder.deliveryAddress = this.deliveryAddress[0];
+            }
+            this.onSaleOrderDateChanged();
+            this.loadProjectByCustomer();
+            // const creditLimit = value.hasOwnProperty("creditLimit")
+            //   ? value.creditLimit
+            //   : 0;
+            // this.saleOrder.creditLimit = kendo.parseFloat(creditLimit);
+            this.loadCreditLimit();
+            this.loadCustomerBalance(this.customer.id);
+            // load quote
+            this.loadQuote();
+            this.loadPaymentTermList();
+        },
+        async loadCustomerDetail(customerId) {
+            try {
+                const strFilter = '?id=' + customerId
+                customerHandler.customerDetail(strFilter).then((res) => {
+                    if (res.data.statusCode === 200) {
+                        const lines = res.data.data || []
+                        lines.forEach(item => {
+                            this.customer = {
+                                id: item.id,
+                                type: item.type || {},
+                                isDonor: item.isDonor || false,
+                                crn: item.crn || '',
+                                customerType: item.customerType || {},
+                                number: item.number || '',
+                                numberName: (item.number || '') + ' - ' + (item.name || ''),
+                                name: item.name || '',
+                                connectId: item.connectId || '',
+                                gender: item.gender || '',
+                                alternativeName: item.alternativeName || '',
+                                taxId: item.taxId || '',
+                                consumerId: item.consumerId || '',
+                                registeredDate: item.registeredDate || '',
+                                customerGroup: item.customerGroup,
+                                receivableAcc: item.receivableAcc,
+                                saleDepositAcc: item.saleDepositAcc,
+                                saleDiscountAcc: item.saleDiscountAcc,
+                                priceLevel: item.priceLevel,
+                                billPayment: item.billPayment,
+                                cashPayment: item.cashPayment || {},
+                                qrPayment: item.qrPayment || {},
+                                nature: item.nature,
+                                image: item.image || {},
+                                noteOnInvoice: item.noteOnInvoice || '',
+                                billingAddress: item.billingAddress,
+                                contactPerson: item.contactPerson,
+                                deliveryAddress: item.deliveryAddress,
+                                email: item.email,
+                                baseCurrency: item.baseCurrency,
+                                decimalFormat: item.decimalFormat
+                            };
+                        })
+                        window.console.log('this.customer', this.customer)
+                        this.onCustomerDropdownChange(this.customer)
+                    }
+                })
+            } catch (e) {
+                window.console.log('Error on customer detail', e)
+            }
+        },
     },
     activated() {
         if (this.$route.params.id) {
@@ -3191,7 +3264,7 @@ export default {
         initsaleOrder() {
             this.initialData();
         },
-        '$route': 'loadSingleData',
+        // '$route': 'loadSingleData',
     },
     created() {
         this.loadTax();
