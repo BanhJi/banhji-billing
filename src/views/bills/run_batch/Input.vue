@@ -405,7 +405,8 @@
             customerGroups: [],
             customers: [],
             mCustomerGroup: {},
-            InvoiceAR:   []
+            InvoiceAR:   [],
+            JournalAR: []
         }),
         methods:{
             rowNumberTmpl(dataItem) {
@@ -2348,32 +2349,72 @@
                 });
             },
             loopInvoice(){
-                 let itemLineDS = this.$refs.itemLineDS.kendoWidget();
+                
+                let itemLineDS = this.$refs.itemLineDS.kendoWidget();
                 const dataRow = itemLineDS.data().filter((o) => o.amount > 0).map((n) => {
                     const otherCharge = new OtherChargeModel(n.otherChargeItem || {})
                     n['otherChargeItem'] = otherCharge
                     return new ItemLineModel(n);
                 });
+                window.console.log('invoice', this.jRaw.length)
                 if(this.customers.length > 0){
                     window.console.log('customers', this.customers.length)
                     this.InvoiceAR = []
+                    this.JournalAR = []
                     for (const element of this.customers){
+                        let receivableAcc = {}
+                        if(this.accReceivable.length > 0){
+                            receivableAcc = this.accReceivable.filter(index => index.id == element.receivableAcc.id)[0]
+                        }
+                        window.console.log('invoice',this.invoice)
                         this.InvoiceAR.push(new InvoiceModel({
                             customer:               element,
                             priceLevel:             this.runBach.priceLevel,
+                            currency:               this.runBach.priceLevel.currency,
                             monthOf:                this.runBach.monthOf,
+                            exchangeRate:           this.runBach.c,
                             segment:                this.runBach.segment,
                             location:               this.runBach.location,
                             dueDate:                this.runBach.dueDate,
                             transactionDate:        this.runBach.transactionDate,
                             transactionType:        this.runBach.transactionType,
+                            lateFee:                this.runBach.lateFee,
                             itemLines:              dataRow,
                             isJournal:              0,
-                            journalStatus:          0
+                            journalStatus:          0,
+                            subTotal:               this.invoice.subTotal,
+                            total:                  this.invoice.total,
+                            remainingAmount:        this.invoice.remainingAmount,
+                            amountDue:              this.invoice.amountDue,
+                            cashBasicIncomeAcc:     this.invoice.cashBasicIncomeAcc,
+                            cr:                     this.invoice.cr,
+                            exchangeAmount:         this.invoice.exchangeAmount,
+                            exchangeItemSubtotal:   this.invoice.exchangeItemSubtotal,
+                            exchangeSubTotal:       this.invoice.exchangeSubTotal,
+                            saleTaxDetail:          this.invoice.saleTaxDetail,
+                            totalTaxAmount:         this.invoice.totalTaxAmount,               
+                            discountTotal:          this.invoice.discountTotal,
+                            employee:               this.invoice.employee,
+                            exchangeItemDiscount:   this.invoice.exchangeItemDiscount,
+                            itemDiscount:           this.invoice.itemDiscount,
+                            itemSubtotal:           this.invoice.itemSubtotal,
+                            txnRate:                this.invoice.txnRate,
+                            rate:                   this.invoice.rate,
                         }))
+                        this.JournalAR.push({
+                            id:             receivableAcc.id + "-" + 'dr',
+                            description:    receivableAcc.name,
+                            account:        receivableAcc,
+                            accountId:      receivableAcc.id,
+                            exchangeAmount: this.invoice.exchangeAmount,
+                            amount:         this.invoice.amountDue,
+                            type:           'dr',
+                            typeAs:         "ar",
+                        })
                     }
                 }
                 window.console.log('InvoiceAR', this.InvoiceAR)
+                window.console.log('jRaw', this.jRaw)
             },
             cancel(){
 

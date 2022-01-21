@@ -4241,32 +4241,35 @@ export default {
                             this.showLoading = true;
                             this.btnDisabled = true;
                             window.console.log('Data', JSON.stringify(data));
-                            billingHandler
-                                .create(data)
-                                .then((response) => {
-                                    if (response.data.statusCode === 201) {
-                                        // this.close(response.data.data)
-                                        // this.$refs.form.reset()
+                            let aA = 0;
+                            if(aA == 1){
+                                billingHandler
+                                    .create(data)
+                                    .then((response) => {
+                                        if (response.data.statusCode === 201) {
+                                            // this.close(response.data.data)
+                                            // this.$refs.form.reset()
+                                            this.showLoading = false;
+                                            this.btnDisabled = false;
+                                            this.$snotify.success("Successfully");
+
+                                            if (isPrint == 1) {
+                                                getPrint(response.data.data);
+                                            } else if (saveNew == "new") {
+                                                this.setDefaultData()
+                                            } else {
+                                                // this.clear()
+                                                this.close(response.data.data);
+                                            }
+                                        }
+                                    })
+                                    .catch((e) => {
                                         this.showLoading = false;
                                         this.btnDisabled = false;
-                                        this.$snotify.success("Successfully");
-
-                                        if (isPrint == 1) {
-                                            getPrint(response.data.data);
-                                        } else if (saveNew == "new") {
-                                            this.setDefaultData()
-                                        } else {
-                                            // this.clear()
-                                            this.close(response.data.data);
-                                        }
-                                    }
-                                })
-                                .catch((e) => {
-                                    this.showLoading = false;
-                                    this.btnDisabled = false;
-                                    this.$snotify.error("Something went wrong");
-                                    this.errors.push(e);
-                                });
+                                        this.$snotify.error("Something went wrong");
+                                        this.errors.push(e);
+                                    });
+                            }
                         }
                     }, 10);
                 });
