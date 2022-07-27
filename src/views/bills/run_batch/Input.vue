@@ -56,7 +56,6 @@
                                 item-value="id"
                                 item-text="name"
                                 return-object
-                                @change="onCustomerTypeChanged('')"
                                 v-model="mCustomerGroup"
                                 :placeholder="$t('customer_group')"
                                 clearable
@@ -363,10 +362,7 @@
     const billingHandler = require("@/scripts/invoice/handler/billingHandler");
     const settingHandler = require("@/scripts/settingHandler");
     const customerGroupHandler = require("@/scripts/customerGroupHandler");
-    const customerHandler = require("@/scripts/customerHandler");
     const accountHandler = require("@/scripts/handler/accounting/account");
-    // const cookieJS = require("@/cookie.js");
-    // const cookie = cookieJS.getCookie();
     const $ = kendo.jQuery
     const DISCOUNT_TYPE = "?type=Sale";
     const itemLinePrefix = "lin-";
@@ -406,7 +402,8 @@
             customers: [],
             mCustomerGroup: {},
             InvoiceAR:   [],
-            JournalAR: []
+            JournalAR: [],
+            data: {}
         }),
         methods:{
             rowNumberTmpl(dataItem) {
@@ -2277,50 +2274,9 @@
                         customerGroupHandler.get().then((res) => {
                             this.showLoading = false;
                             this.customerGroups = res;
-                            // if (this.customerGroups.length > 0) {
-                            //     this.mCustomerGroup = this.customerGroups[0];
-                            //     this.loadCustomerCenter(this.search);
-                            // }
                         });
                     }, 10);
                 });
-            },
-            async loadCustomerCenter(search) {
-                new Promise((resolve) => {
-                    setTimeout(() => {
-                        resolve("resolved");
-                        this.customers = [];
-                        let groupId = '';
-                        let customerTypeId = '';
-                        if (this.mCustomerGroup) {
-                            groupId = this.mCustomerGroup.id || ''
-                        }
-                        if (this.mCustomerType) {
-                            customerTypeId = this.mCustomerType.id || ''
-                        }
-                        let strFilter = "?is_donor=false";
-                        if (this.appType === 'npo') {
-                            strFilter = "?is_donor=true";
-                        }
-                        const strSearch = search || "";
-                        window.console.log('strFilter', strFilter, strSearch)
-                        const strFilterV1 = '?donor=0&ctid=' + customerTypeId + '&grp=' + groupId + '&search=' + strSearch
-                        customerHandler.centerv1(strFilterV1).then((res) => {
-                                this.showLoading = true;
-                                if (res.data.statusCode === 200) {
-                                    this.showLoading = false;
-                                    this.customers = res.data.data;
-                                    window.console.log(this.customers)
-                                } else {
-                                    this.showLoading = false;
-                                }
-                            });
-                    }, 10);
-                });
-            },
-            onCustomerTypeChanged(search) {
-                this.showLoading = true;
-                this.loadCustomerCenter(search);
             },
             async loadAccount() {
                 new Promise((resolve) => {
@@ -2349,7 +2305,6 @@
                 });
             },
             loopInvoice(){
-                
                 let itemLineDS = this.$refs.itemLineDS.kendoWidget();
                 const dataRow = itemLineDS.data().filter((o) => o.amount > 0).map((n) => {
                     const otherCharge = new OtherChargeModel(n.otherChargeItem || {})
@@ -2411,17 +2366,50 @@
                             type:           'dr',
                             typeAs:         "ar",
                         })
+                        this.JournalAR.push(...this.jRaw)
                     }
                 }
-                window.console.log('InvoiceAR', this.InvoiceAR)
-                window.console.log('jRaw', this.jRaw)
+                this.data = {
+                    JournalAR:      this.JournalAR,
+                    InvoiceAR:      this.InvoiceAR
+                }
+                this.$emit('dataInput', this.data)
+                window.console.log('InvoiceAR', this.data)
             },
             cancel(){
 
             },
-            saveClose(){
-                
-            }
+            onSaveStap(){
+                let itemLineDS = this.$refs.itemLineDS.kendoWidget();
+                const dataRow = itemLineDS.data().filter((o) => o.amount > 0).map((n) => {
+                    const otherCharge = new OtherChargeModel(n.otherChargeItem || {})
+                    n['otherChargeItem'] = otherCharge
+                    return new ItemLineModel(n);
+                });
+                let data = {
+                    id:                 this.runBach.id || "",
+                    uuid:               this.runBach.uuid || "",
+                    journal_uuid:       this.runBach.journal_uuid || "",
+                    type:               "Invoice",
+                    number:             this.runBach.number,
+                    abbr:               this.runBach.transactionType.abbr,
+                    transactionDate:    this.runBach.transactionDate,
+                    dueDate:            this.runBach.dueDate,
+                    monthOf:            this.runBach.monthOf,
+                    transactionType:    this.runBach.transactionType,
+                    customerGroup:      this.mCustomerGroup,
+                    segment:            this.runBach.segment,
+                    lateFee:            this.runBach.lateFee,
+                    priceLevel:         this.runBach.priceLevel,
+                    location:           this.runBach.location,
+                    currency:           this.runBach.priceLevel.currency,
+                    itemLines:          dataRow
+                }
+                this.returnData(data)
+            },
+            returnData(data){
+                this.$emit('returnData', data)
+            },
         },
         async mounted(){
             await this.loadCustomerGroup()

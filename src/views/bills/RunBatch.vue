@@ -43,11 +43,11 @@
                                             <v-divider/>
                                             <!-- Body function to input -->
                                             <div v-show="steps==1">
-                                                 <Input ref="modal" @headline="refresh" :propInput="loadPayrolls"/>
+                                                 <Input ref="modal" @returnData="refresh"/>
                                             </div>
                                             <!-- Steps 2 Adjustemnt -->
                                             <div v-show="steps==2">
-                                                <Review ref="adjust" @headline="refresh" :propAdjustment="loadPayrolls"/>
+                                                <Review :loadData="loadData"/>
                                             </div>
                                         </v-form>
                                     </div>
@@ -103,25 +103,24 @@
             payroll_id: '',
             payrollList: {},
             loadPayrolls: [],
+            loadData: {}
         }),
         methods:{
             refresh(data){
-                if(data === 201){
-                    this.loadPayrollList()
+                if(data){
+                    this.loadData = data
                 }
             },
             saveSpets(){
                 if(this.steps === 1){
-                    this.$refs.modal.saveNext()
+                    this.$refs.modal.onSaveStap()
                 }else if(this.steps === 2){
                     this.$refs.adjust.saveAdjust()
                 }
+                this.nextStpes()
             },
             nextStpes(){
-                if(this.payrollList.step > 0){
-                    this.steps = this.payrollList.step
-                }
-                this.steps = this.steps
+                this.steps = this.steps + 1
                 this.reachTopStep = this.steps
                 this.stepsCondition(this.steps)
             },
